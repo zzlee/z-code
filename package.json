@@ -1,0 +1,28 @@
+{
+  "name": "z-code",
+  "version": "0.1.0",
+  "description": "AI Coding agent CLI tool",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^3.0.66",
+    "@ai-sdk/openai": "latest",
+    "ai": "^6.0.174",
+    "chalk": "latest",
+    "commander": "latest",
+    "fs-extra": "latest",
+    "ora": "^9.4.0",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "latest",
+    "@types/node": "latest",
+    "tsx": "^4.21.0",
+    "typescript": "latest"
+  }
+}
