@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc && cp ./src/tools/*.txt dist/tools/ && chmod +x dist/index.js",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts"
   },
@@ -15,12 +15,17 @@
     "ai": "^6.0.174",
     "chalk": "latest",
     "commander": "latest",
+    "diff": "^9.0.0",
     "fs-extra": "latest",
+    "glob": "^13.0.6",
     "ora": "^9.4.0",
-    "zod": "latest"
+    "zod": "latest",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
+    "@types/diff": "^7.0.2",
     "@types/fs-extra": "latest",
+    "@types/glob": "^8.1.0",
     "@types/node": "latest",
     "tsx": "^4.21.0",
     "typescript": "latest"

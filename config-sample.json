@@ -1,0 +1,11 @@
+{
+  "default_provider": "google-gemini",
+  "streaming": true,
+  "providers": {
+    "google-gemini": {
+      "provider": "google",
+      "model": "gemma-4-31b-it",
+      "apiKey": "YOUR_API_KEY"
+    }
+  }
+}

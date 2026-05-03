@@ -3,11 +3,21 @@ import readline from "readline";
 import fs from "fs-extra";
 import chalk from "chalk";
 import ora from "ora";
+import { tool } from "ai";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { loadConfig, saveConfig, Config } from "./config/config.js";
 import { loadSession, saveSession, createSessionId, listSessions, Messages, Session } from "./session/session.js";
 import { runAgentStreamText } from "./agent/agent.js";
-import { BuiltinTools } from "./tool/builtin.js";
+import { 
+  BashTool, 
+  ReadTool, 
+  WriteTool, 
+  GlobTool, 
+  EditTool, 
+  GrepTool, 
+  ApplyPatchTool 
+} from "./tools/index.js";
 
 const program = new Command();
 
@@ -87,7 +97,36 @@ async function main() {
 
           try {
             const systemPrompt = "You are z-code, an AI coding agent. You can use tools to help the user.";
-            await runAgentStreamText(config, session, systemPrompt, BuiltinTools);
+            const toolsList = [
+              BashTool,
+              ReadTool,
+              WriteTool,
+              GlobTool,
+              EditTool,
+              GrepTool,
+              ApplyPatchTool,
+            ];
+            const tools = toolsList.reduce((acc, toolDef) => {
+              acc[toolDef.id] = tool({
+                description: toolDef.description,
+                parameters: toolDef.parameters,
+                execute: async (args: any) => {
+                  console.log(`DEBUG: ${JSON.stringify(args)}`);
+
+                  const result = await toolDef.execute(args, {
+                    sessionID: session.id,
+                    messageID: "",
+                    agent: "z-code"
+                  });
+
+                  return { content: result };
+                },
+              } as any);
+              return acc;
+            }, {} as any);
+
+
+            await runAgentStreamText(config, session, systemPrompt, tools);
 
             ask();
           } catch (error: any) {
