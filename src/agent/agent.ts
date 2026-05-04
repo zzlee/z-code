@@ -220,56 +220,42 @@ export async function runAgentGenerateText(
       maxSteps: 1,
     } as any) as any;
 
-    for (const step of result.steps) {
-      for (const toolCall of step.toolCalls) {
-        session.messages.push({
-          role: "assistant",
-          content: [
-            {
-              type: "tool-call",
-              toolCallId: toolCall.toolCallId,
-              toolName: toolCall.toolName,
-              input: toolCall.args,
-            },
-          ],
-        });
-      }
+    for (const message of result.response.messages) {
+      // Content can be a string or an array of parts
+      if (typeof message.content === 'string') {
+        console.log(message.content);
+      } else {
+        for (const part of message.content) {
+          switch (part.type) {
+            case 'text':
+              console.log(part.text);
+              break;
 
-      for (const toolResult of step.toolResults) {
-        session.messages.push({
-          role: "tool",
-          content: [
-            {
-              type: "tool-result",
-              toolCallId: toolResult.toolCallId,
-              toolName: toolResult.toolName,
-              output: { type: "json", value: toolResult.result },
-            },
-          ],
-        });
-      }
-    }
+            case 'reasoning':
+              if (verbose === 1) {
+                console.log(chalk.gray(part.text));
+              }
+              break;
 
-    if (result.reasoning) {
-      const reasoningText = Array.isArray(result.reasoning)
-        ? result.reasoning.map((r: any) => r.text).join("\n")
-        : result.reasoning;
+            case 'tool-call':
+              if (verbose === 1) {
+                console.log(chalk.blue(`Executing ${part.toolName}...`));
+              }
+              break;
 
-      session.messages.push({
-        role: "assistant",
-        content: [{ type: "reasoning", text: reasoningText }],
-      });
-      if (verbose === 1) {
-        process.stdout.write(chalk.gray(reasoningText) + "\n");
+            case 'tool-result':
+              if (verbose === 1) {
+                console.log(chalk.blue(`Executed ${part.toolName}.`));
+              }
+              break;
+          }
+        }
       }
     }
 
-    if (result.text) {
-      session.messages.push({
-        role: "assistant",
-        content: [{ type: "text", text: result.text }],
-      });
-    }
+    result.response.messages.forEach((m: any) => {
+      session.messages.push(m);
+    });
 
     session.updatedAt = new Date().toISOString();
     await saveSession(session);
