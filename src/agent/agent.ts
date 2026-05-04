@@ -53,7 +53,8 @@ export async function runAgentStreamText(
     let finishPart = null;
     let fullText = "";
     for await (const part of result.fullStream) {
-      console.log(chalk.yellow(`${JSON.stringify(part)}`));
+      // console.log(chalk.yellow(`${JSON.stringify(part)}`));
+
       switch (part.type) {
         case 'start': {
           break;
@@ -75,6 +76,7 @@ export async function runAgentStreamText(
             type: "text",
             text: fullText
           } ] });
+          process.stdout.write("\n");
           break;
         }
         case 'reasoning-start': {

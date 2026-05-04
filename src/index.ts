@@ -25,70 +25,8 @@ const program = new Command();
 async function main() {
   program
     .name("z-code")
-    .description("AI Coding agent CLI tool")
+    .description("AI Coding agent CLI")
     .version("0.1.0");
-
-  program
-    .command("config")
-    .description("Configure z-code")
-    .option("-p, --provider <name>", "Provider name")
-    .option("-k, --key <key>", "API Key")
-    .option("-m, --model <model>", "Model name")
-    .option("-u, --url <url>", "Base URL")
-    .action(async (options) => {
-      const config: Config = {
-        default_provider: options.provider || "openai",
-        streaming: true,
-        providers: {
-          [options.provider || "openai"]: {
-            provider: "openai",
-            apiKey: options.key || "",
-            model: options.model || "gpt-4o",
-            baseUrl: options.url,
-          },
-        },
-      };
-      await saveConfig(config);
-      console.log(chalk.green("Configuration saved successfully."));
-    });
-
-
-
-  program
-    .command("session <id>")
-    .description("Show the content of a session")
-    .action(async (id) => {
-      const session = await loadSession(id);
-      if (!session) {
-        console.error(chalk.red(`Session ${id} not found.`));
-        process.exit(1);
-      }
-
-      console.log(chalk.blue(`Session: ${session.id} (Created: ${new Date(session.createdAt).toLocaleString()})\n`));
-
-      // session.messages.forEach((m) => {
-      //   const roleColor = m.role === "user" ? chalk.green : chalk.cyan;
-      //   const roleLabel = m.role === "user" ? "user" : "z-code";
-      //   console.log(`${roleColor(roleLabel + " > ")}${m.content}\n`);
-      // });
-    });
-
-  program
-    .command("sessions")
-    .description("List all sessions")
-    .action(async () => {
-      const sessions = await listSessions();
-      if (sessions.length === 0) {
-        console.log("No sessions found.");
-        return;
-      }
-      console.log(chalk.blue("Sessions:"));
-      sessions.forEach((s: Session) => {
-        const date = new Date(s.createdAt).toLocaleString();
-        console.log(`- ${s.id} (${date})`);
-      });
-    });
-
 
   program.allowUnknownOption(false);
 
@@ -96,7 +34,7 @@ async function main() {
     .option("-c, --continue", "Continue from the latest session")
     .option("-s, --session <id>", "Session ID to resume")
     .option("-f, --fork", "Fork the session")
-    .argument("[args...]", "Positional arguments")
+    .argument("[args...]", "Prompt to the agent (starts with /agentName to specify agent, defaults to /code)")
     .action(async (args, options) => {
       let agentName = "code";
       let argsToProcess = args;
@@ -105,7 +43,7 @@ async function main() {
         argsToProcess = args.slice(1);
       }
 
-      const { systemPrompt, commandPrompt } = loadPrompt(agentName);
+      const { agentName: actualAgentName, systemPrompt, commandPrompt, tools: toolFilter } = loadPrompt(agentName);
       let userPrompt = argsToProcess.join(" ").trim();
 
       const finalUserPrompt = commandPrompt ? commandPrompt + "\n\n" + userPrompt : userPrompt;
@@ -175,21 +113,34 @@ async function main() {
           EditTool,
           GrepTool,
           ApplyPatchTool,
-        ];
+        ].filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
+
+        console.log(chalk.blue(`Agent: ${actualAgentName}`));
+        console.log(chalk.blue(`Tools: ${toolsList.map(t => t.id).join(", ")}`));
+
         const tools = toolsList.reduce((acc, toolDef) => {
           acc[toolDef.id] = tool({
             description: toolDef.description,
             parameters: toolDef.parameters,
             execute: async (args: any) => {
-              console.log(`DEBUG: ${JSON.stringify(args)}`);
+              // console.log(`DEBUG: ${JSON.stringify(args)}`);
 
-              const result = await toolDef.execute(args, {
-                sessionID: session!.id,
-                messageID: "",
-                agent: "z-code"
-              });
+              try {
+                const result = await toolDef.execute(args, {
+                  sessionID: session!.id,
+                  messageID: "",
+                  agent: "z-code"
+                });
 
-              return { content: result };
+                return { content: result };
+              } catch (error: any) {
+                // console.error(chalk.red(`\nError: ${error.message}`));
+
+                return { content: {
+                  output: error.message,
+                  metadata: {},
+                } };
+              }
             },
           } as any);
           return acc;
