@@ -88,8 +88,8 @@ export async function deleteAllSessions(): Promise<void> {
 
 export function formatSessionToMarkdown(session: Session): string {
   let markdown = `# Session ${session.id}\n`;
-  markdown += `Created: ${session.createdAt}\n`;
-  markdown += `Updated: ${session.updatedAt}\n\n---\n\n`;
+  markdown += `Created: ${new Date(session.createdAt).toLocaleString()}\n`;
+  markdown += `Updated: ${new Date(session.updatedAt).toLocaleString()}\n\n---\n\n`;
 
   session.messages.forEach((m) => {
     switch (m.role) {

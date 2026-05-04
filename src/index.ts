@@ -45,7 +45,7 @@ async function main() {
           console.log(chalk.blue("Sessions:"));
           sessions.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
           sessions.forEach(s => {
-            console.log(`${chalk.white(s.id)} - Created: ${s.createdAt} - Updated: ${s.updatedAt}`);
+            console.log(`${chalk.white(s.id)} - Created: ${new Date(s.createdAt).toLocaleString()} - Updated: ${new Date(s.updatedAt).toLocaleString()}`);
           });
         }
         process.exit(0);
