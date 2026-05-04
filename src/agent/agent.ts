@@ -71,9 +71,6 @@ export async function runAgentStreamText(
   const tools = getTools(toolsList, session);
 
   for (let iter = 0;; iter++) {
-
-
-    let messages: Messages = [];
     const result = await streamText({
       model,
       system: systemPrompt,
@@ -81,121 +78,52 @@ export async function runAgentStreamText(
       tools: tools,
     } as any);
 
-    let finishPart = null;
-    let fullText = "";
     for await (const part of result.fullStream) {
-      // console.log(chalk.yellow(`${JSON.stringify(part)}`));
-
       switch (part.type) {
-        case 'start': {
-          break;
-        }
-        case 'start-step': {
-          break;
-        }
-        case 'text-start': {
-          fullText = "";
-          break;
-        }
         case 'text-delta': {
-          fullText += part.text;
           process.stdout.write(part.text);
           break;
         }
         case 'text-end': {
-          messages.push({ role: "assistant", content: [ {
-            type: "text",
-            text: fullText
-          } ] });
           process.stdout.write("\n");
           break;
         }
         case 'reasoning-start': {
-          fullText = "";
           break;
         }
         case 'reasoning-delta': {
-          fullText += part.text;
           if (verbose === 1) {
-            process.stdout.write(chalk.gray(part.text));
+            process.stdout.write(chalk.dim(part.text));
           }
-          break;
-        }
-        case 'reasoning-end': {
-          messages.push({ role: "assistant", content: [ {
-            type: 'reasoning',
-            text: fullText
-          } ] });
-          if (verbose === 1) {
-            process.stdout.write("\n");
-          }
-          break;
-        }
-        case 'source': {
-          break;
-        }
-        case 'file': {
           break;
         }
         case 'tool-call': {
-          messages.push({ role: "assistant", content: [ {
-            type: 'tool-call',
-            toolCallId: part.toolCallId,
-            toolName: part.toolName,
-            input: part.input
-          } ] });
-          break;
-        }
-        case 'tool-input-start': {
-          break;
-        }
-        case 'tool-input-delta': {
-          break;
-        }
-        case 'tool-input-end': {
+          if (verbose === 1) {
+            process.stdout.write(chalk.blue(` [${part.toolName}] `));
+          }
           break;
         }
         case 'tool-result': {
-          messages.push({ role: "tool", content: [ {
-            type: 'tool-result',
-            toolCallId: part.toolCallId,
-            toolName: part.toolName,
-            output: { type: "json", value: part.output }
-          } ] });
+          if (verbose === 1) {
+            process.stdout.write(chalk.green(` [${part.toolName}] `));
+          }
          break;
         }
-        case 'tool-error': {
+        default:
+          // console.log(chalk.yellow(`${part.type}`));
           break;
-        }
-        case 'finish-step': {
-          break;
-        }
-        case 'finish': {
-          finishPart = part;
-          break;
-        }
-        case 'error': {
-          break;
-        }
-        case 'raw': {
-          break;
-        }
       }
     }
 
-    if(! finishPart) {
-      console.error(chalk.red("unexpected, missing finishPart"));
-      break;
-    }
-
-    messages.forEach((m) => {
+    let response = await result.response;
+    response.messages.forEach((m: any) => {
       session.messages.push(m);
     });
 
     session.updatedAt = new Date().toISOString();
     await saveSession(session);
 
-    if(finishPart.finishReason == "stop") {
+    if(await result.finishReason == "stop") {
       break;
     }
   }
@@ -221,7 +149,6 @@ export async function runAgentGenerateText(
     } as any) as any;
 
     for (const message of result.response.messages) {
-      // Content can be a string or an array of parts
       if (typeof message.content === 'string') {
         console.log(message.content);
       } else {
@@ -233,19 +160,19 @@ export async function runAgentGenerateText(
 
             case 'reasoning':
               if (verbose === 1) {
-                console.log(chalk.gray(part.text));
+                console.log(chalk.dim(part.text));
               }
               break;
 
             case 'tool-call':
               if (verbose === 1) {
-                console.log(chalk.blue(`Executing ${part.toolName}...`));
+                console.log(chalk.blue(` [${part.toolName}] `));
               }
               break;
 
             case 'tool-result':
               if (verbose === 1) {
-                console.log(chalk.blue(`Executed ${part.toolName}.`));
+                console.log(chalk.green(` [${part.toolName}] `));
               }
               break;
           }
