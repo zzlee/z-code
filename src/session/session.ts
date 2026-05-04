@@ -69,5 +69,19 @@ export async function listSessions(): Promise<Session[]> {
 }
 
 export function createSessionId(): string {
-  return Math.random().toString(36).substring(2, 15);
+   return Math.random().toString(36).substring(2, 15);
+ }
+
+export async function deleteSession(sessionId: string): Promise<boolean> {
+  const filePath = path.join(SESSIONS_DIR, `${sessionId}.json`);
+  if (await fs.pathExists(filePath)) {
+    await fs.remove(filePath);
+    return true;
+  }
+  return false;
+}
+
+export async function deleteAllSessions(): Promise<void> {
+  await fs.remove(SESSIONS_DIR);
+  await ensureSessionsDir();
 }
