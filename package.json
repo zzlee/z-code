@@ -22,7 +22,6 @@
     "fs-extra": "latest",
     "glob": "^13.0.6",
     "ora": "^9.4.0",
-    "pptxgenjs": "^4.0.1",
     "zod": "latest",
     "zod-to-json-schema": "^3.25.2"
   },
