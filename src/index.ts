@@ -160,7 +160,7 @@ async function main() {
           return acc;
         }, {} as any);
 
-        await runAgentGenerateText(config, session, systemPrompt, tools, verbose);
+        await runAgentStreamText(config, session, systemPrompt, tools, verbose);
       } catch (error: any) {
         console.error(chalk.red(`\nError: ${error.message}`));
       }
