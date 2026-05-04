@@ -15,6 +15,7 @@ export interface Skill {
   name: string;
   description?: string;
   body: string;
+  dir: string;
 }
 
 function parseYaml(yamlString: string): Record<string, any> {
@@ -95,26 +96,26 @@ export async function loadSkill(skillPathOrName: string): Promise<Skill> {
     candidates.push(path.join(os.homedir(), ".config", "z-code", "skills", skillPathOrName));
   }
 
-  for (const candidate of candidates) {
-    try {
-      const stats = await fs.stat(candidate);
-      if (stats.isDirectory()) {
-        const skillFile = path.join(candidate, "SKILL.md");
-        try {
-          await fs.access(skillFile);
-          const { metadata, body } = await loadSkillData(skillFile);
-          return { name: metadata.name || skillPathOrName, description: metadata.description, body };
-        } catch {
-          // Directory exists but SKILL.md doesn't
+    for (const candidate of candidates) {
+      try {
+        const stats = await fs.stat(candidate);
+        if (stats.isDirectory()) {
+          const skillFile = path.join(candidate, "SKILL.md");
+          try {
+            await fs.access(skillFile);
+            const { metadata, body } = await loadSkillData(skillFile);
+            return { name: metadata.name || skillPathOrName, description: metadata.description, body, dir: candidate };
+          } catch {
+            // Directory exists but SKILL.md doesn't
+          }
+        } else if (stats.isFile()) {
+          const { metadata, body } = await loadSkillData(candidate);
+          return { name: metadata.name || skillPathOrName, description: metadata.description, body, dir: path.dirname(candidate) };
         }
-      } else if (stats.isFile()) {
-        const { metadata, body } = await loadSkillData(candidate);
-        return { name: metadata.name || skillPathOrName, description: metadata.description, body };
+      } catch {
+        // Candidate path doesn't exist
       }
-    } catch {
-      // Candidate path doesn't exist
     }
-  }
 
   throw new Error(
     `Failed to locate skill '${skillPathOrName}'. Checked paths:\n` +

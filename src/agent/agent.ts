@@ -45,6 +45,7 @@ function getTools(toolsList: any[], session: Session) {
             messageID: "",
             agent: "z-code",
           });
+
           return { content: result };
         } catch (error: any) {
           return {

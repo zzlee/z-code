@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "bin": {
-    "z-code": "./dist/index.js"
+    "z-code": "dist/index.js"
   },
   "scripts": {
     "build": "rm -rf dist && tsc && cp ./src/tools/*.txt dist/tools/ && cp ./prompts dist/agent -rf && chmod +x dist/index.js",
@@ -32,5 +32,12 @@
     "@types/node": "latest",
     "tsx": "^4.21.0",
     "typescript": "latest"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com-zzlee:zzlee/z-code.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
