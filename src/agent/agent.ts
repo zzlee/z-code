@@ -3,6 +3,7 @@ import ora from "ora";
 import { streamText, generateText, ToolSet, tool } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOllama } from "ollama-ai-provider-v2";
 import { Config } from "../config/config.js";
 import { saveSession, Messages, Session } from "../session/session.js";
 
@@ -22,6 +23,11 @@ function getModel(
       apiKey: providerConfig.apiKey,
     });
     model = google(providerConfig.model);
+  } else if (providerConfig.provider === "ollama") {
+    const ollama = createOllama({
+      baseURL: providerConfig.baseUrl,
+    });
+    model = ollama(providerConfig.model as any);
   } else {
     const provider = createOpenAI({
       apiKey: providerConfig.apiKey,
