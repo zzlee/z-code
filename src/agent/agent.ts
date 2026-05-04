@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import ora from "ora";
-import { streamText, ToolSet } from "ai";
+import { streamText, generateText, ToolSet } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { Config } from "../config/config.js";
@@ -169,4 +169,78 @@ export async function runAgentStreamText(
       break;
     }
   }
+}
+
+export async function runAgentGenerateText(
+  config: Config,
+  session: Session,
+  systemPrompt: string,
+  tools: ToolSet,
+  verbose: number
+) {
+  const model = getModel(config);
+
+  const result = await generateText({
+    model,
+    system: systemPrompt,
+    messages: session.messages,
+    tools: tools,
+    maxSteps: 10,
+  } as any) as any;
+
+  for (const step of result.steps) {
+    for (const toolCall of step.toolCalls) {
+      session.messages.push({
+        role: "assistant",
+        content: [
+          {
+            type: "tool-call",
+            toolCallId: toolCall.toolCallId,
+            toolName: toolCall.toolName,
+            input: toolCall.args,
+          },
+        ],
+      });
+    }
+
+    for (const toolResult of step.toolResults) {
+      session.messages.push({
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            toolCallId: toolResult.toolCallId,
+            toolName: toolResult.toolName,
+            output: { type: "json", value: toolResult.result },
+          },
+        ],
+      });
+    }
+  }
+
+  if (result.reasoning) {
+    const reasoningText = Array.isArray(result.reasoning)
+      ? result.reasoning.map((r: any) => r.text).join("\n")
+      : result.reasoning;
+
+    session.messages.push({
+      role: "assistant",
+      content: [{ type: "reasoning", text: reasoningText }],
+    });
+    if (verbose === 1) {
+      process.stdout.write(chalk.gray(reasoningText) + "\n");
+    }
+  }
+
+  if (result.text) {
+    session.messages.push({
+      role: "assistant",
+      content: [{ type: "text", text: result.text }],
+    });
+  }
+
+  session.updatedAt = new Date().toISOString();
+  await saveSession(session);
+
+  return result.text;
 }

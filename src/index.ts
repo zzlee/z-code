@@ -10,7 +10,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { loadConfig, saveConfig, Config } from "./config/config.js";
 import { loadSession, saveSession, createSessionId, listSessions, Messages, Session } from "./session/session.js";
-import { runAgentStreamText } from "./agent/agent.js";
+import { runAgentStreamText, runAgentGenerateText } from "./agent/agent.js";
 import { loadPrompt } from "./agent/prompt.js";
 import { 
   BashTool, 
@@ -160,7 +160,7 @@ async function main() {
           return acc;
         }, {} as any);
 
-        await runAgentStreamText(config, session, systemPrompt, tools, verbose);
+        await runAgentGenerateText(config, session, systemPrompt, tools, verbose);
       } catch (error: any) {
         console.error(chalk.red(`\nError: ${error.message}`));
       }
