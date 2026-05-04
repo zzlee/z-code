@@ -12,8 +12,6 @@ import { GrepTool } from "./grep.js";
 export { GrepTool };
 import { WriteTool } from "./write.js";
 export { WriteTool };
-import { ApplyPatchTool } from "./apply_patch.js";
-export { ApplyPatchTool };
 import { LoadSkillTool } from "./load_skill.js";
 export { LoadSkillTool };
 
