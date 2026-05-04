@@ -1,0 +1,6 @@
+Read the web using DuckDuckGo search. 
+Use this tool when you need to find:
+1. Latest API documentation for a library.
+2. Solutions to specific error messages found in logs.
+3. General technical knowledge or best practices not present in the current codebase.
+Return a list of relevant URLs and snippets.
