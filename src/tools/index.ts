@@ -14,6 +14,8 @@ import { WriteTool } from "./write.js";
 export { WriteTool };
 import { ApplyPatchTool } from "./apply_patch.js";
 export { ApplyPatchTool };
+import { LoadSkillTool } from "./load_skill.js";
+export { LoadSkillTool };
 
 export function getToolsList(toolFilter?: string[]) {
   const toolsList = [
@@ -23,7 +25,7 @@ export function getToolsList(toolFilter?: string[]) {
     GlobTool,
     EditTool,
     GrepTool,
-    ApplyPatchTool,
+    LoadSkillTool
   ].filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
 
   return toolsList;

@@ -70,6 +70,8 @@ export async function runAgentStreamText(
   let model = getModel(config);
   const tools = getTools(toolsList, session);
 
+  // console.log(`tools ==> ${JSON.stringify(tools)}`);
+
   for (let iter = 0;; iter++) {
     const result = await streamText({
       model,

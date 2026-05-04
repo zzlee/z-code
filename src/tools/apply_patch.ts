@@ -19,8 +19,8 @@ const Bom = {
   },
 };
 
-const parameters = z.object({
-  patchText: z.string().describe("The full patch text that describes all changes to be made"),
+const Parameters = z.object({
+  patch: z.string().describe("The full patch text that describes all changes to be made"),
 });
 
 export type Hunk =
@@ -396,15 +396,15 @@ function loadDescription() {
   }
 }
 
-export const ApplyPatchTool: ToolDef<typeof parameters> = {
+export const ApplyPatchTool: ToolDef<typeof Parameters> = {
   id: "apply_patch",
   description: loadDescription(),
-  parameters,
+  parameters: Parameters,
   async execute(params, ctx) {
-    if (!params.patchText) throw new Error("patchText is required");
+    if (!params.patch) throw new Error("patch is required");
     let hunks: Hunk[];
     try {
-      const parseResult = parsePatch(params.patchText);
+      const parseResult = parsePatch(params.patch);
       hunks = parseResult.hunks;
     } catch (error: any) {
       throw new Error(`apply_patch verification failed: ${error.message}`);
