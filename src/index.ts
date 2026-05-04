@@ -32,7 +32,7 @@ async function main() {
     .option("--list-sessions", "List all sessions")
     .option("--delete-all-sessions", "Delete all sessions")
     .option("--delete-session <id>", "Delete a specific session")
-    .option("--show-session <id>", "Display session history in markdown format")
+    .option("--show-session [id]", "Display session history in markdown format")
     .argument("[args...]", "Prompt to the agent (starts with /agentName to specify agent, defaults to /code)")
     .action(async (args, options) => {
        const verbose = options.verbose === "1" ? 1 : 0;
@@ -68,11 +68,22 @@ async function main() {
       }
 
       if (options.showSession) {
-        const session = await loadSession(options.showSession);
+        let sessionId = options.showSession;
+        if (sessionId === true) {
+          const sessions = await listSessions();
+          if (sessions.length === 0) {
+            console.log(chalk.yellow("No sessions found."));
+            process.exit(0);
+          }
+          sessions.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+          sessionId = sessions[0].id;
+        }
+
+        const session = await loadSession(sessionId);
         if (session) {
           console.log(formatSessionToMarkdown(session));
         } else {
-          console.error(chalk.red(`Session ${options.showSession} not found.`));
+          console.error(chalk.red(`Session ${sessionId} not found.`));
           process.exit(1);
         }
         process.exit(0);
