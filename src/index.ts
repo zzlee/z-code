@@ -35,6 +35,7 @@ async function main() {
     .option("--list-skills", "List all available skills")
     .option("--show-skill <name>", "Show details of a specific skill")
     .option("--show-session [id]", "Display session history in markdown format")
+    .option("--load-skill <name>", "Load a skill", (val, prev: string[]) => prev.concat([val]), [])
     .argument("[args...]", "Prompt to the agent (starts with /agentName to specify agent, defaults to /code)")
     .action(async (args, options) => {
        const verbose = options.verbose === "1" ? 1 : 0;
@@ -131,7 +132,22 @@ async function main() {
          argsToProcess = args.slice(1);
        }
 
-       const { agentName: actualAgentName, systemPrompt, commandPrompt, tools: toolFilter } = loadPrompt(agentName);
+       let { agentName: actualAgentName, systemPrompt, commandPrompt, tools: toolFilter } = loadPrompt(agentName);
+
+       if (options.loadSkill && options.loadSkill.length > 0) {
+         let skillSnippets = "\n\n# Loaded Skills\n";
+         for (const skillName of options.loadSkill) {
+           try {
+             const skill = await loadSkill(skillName);
+             skillSnippets += `<skill>\n  <name>${skill.name}</name>\n  <description>${skill.description || ""}</description>\n</skill>\n`;
+           } catch (error: any) {
+             console.error(chalk.red(`Fatal error: ${error.message}`));
+             process.exit(1);
+           }
+         }
+         systemPrompt += skillSnippets;
+       }
+
        let userPrompt = argsToProcess.join(" ").trim();
 
        const finalUserPrompt = commandPrompt ? commandPrompt + "\n\n" + userPrompt : userPrompt;
