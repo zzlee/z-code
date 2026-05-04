@@ -10,7 +10,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { loadConfig, saveConfig, Config } from "./config/config.js";
 import { loadSession, saveSession, createSessionId, listSessions, deleteSession, deleteAllSessions, Messages, Session, formatSessionToMarkdown } from "./session/session.js";
 import { runAgentStreamText, runAgentGenerateText } from "./agent/agent.js";
-import { loadPrompt, listSkills } from "./agent/prompt.js";
+import { loadPrompt, listSkills, loadSkill } from "./agent/prompt.js";
 import { getToolsList } from "./tools/index.js";
 
 const program = new Command();
@@ -33,6 +33,7 @@ async function main() {
     .option("--delete-all-sessions", "Delete all sessions")
     .option("--delete-session <id>", "Delete a specific session")
     .option("--list-skills", "List all available skills")
+    .option("--show-skill <name>", "Show details of a specific skill")
     .option("--show-session [id]", "Display session history in markdown format")
     .argument("[args...]", "Prompt to the agent (starts with /agentName to specify agent, defaults to /code)")
     .action(async (args, options) => {
@@ -75,8 +76,28 @@ async function main() {
         } else {
           console.log(chalk.blue("Available skills:"));
           skills.forEach(s => {
-            console.log(`${chalk.bold.cyan(s.name)} ${s.description ? `- ${s.description}` : ""}`);
+            let description = s.description || "";
+            if (description.length > 50) {
+              description = description.substring(0, 50) + "...";
+            }
+            console.log(`${chalk.bold.cyan(s.name)} ${description ? `- ${description}` : ""}`);
           });
+        }
+        process.exit(0);
+      }
+
+      if (options.showSkill) {
+        try {
+          const skill = await loadSkill(options.showSkill);
+          console.log(`${chalk.bold.cyan(skill.name)}`);
+          if (skill.description) {
+            console.log(`\n${chalk.white("Description:")}\n${skill.description}`);
+          }
+          if (skill.body) {
+            console.log(`\n${chalk.white("Body:")}\n${skill.body}`);
+          }
+        } catch (error: any) {
+          console.error(chalk.red(error.message));
         }
         process.exit(0);
       }
