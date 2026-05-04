@@ -211,67 +211,71 @@ export async function runAgentGenerateText(
   const model = getModel(config);
   const tools = getTools(toolsList, session);
 
-  const result = await generateText({
-    model,
-    system: systemPrompt,
-    messages: session.messages,
-    tools: tools,
-    maxSteps: 10,
-  } as any) as any;
+  for (let iter = 0;; iter++) {
+    const result = await generateText({
+      model,
+      system: systemPrompt,
+      messages: session.messages,
+      tools: tools,
+      maxSteps: 1,
+    } as any) as any;
 
-  for (const step of result.steps) {
-    for (const toolCall of step.toolCalls) {
+    for (const step of result.steps) {
+      for (const toolCall of step.toolCalls) {
+        session.messages.push({
+          role: "assistant",
+          content: [
+            {
+              type: "tool-call",
+              toolCallId: toolCall.toolCallId,
+              toolName: toolCall.toolName,
+              input: toolCall.args,
+            },
+          ],
+        });
+      }
+
+      for (const toolResult of step.toolResults) {
+        session.messages.push({
+          role: "tool",
+          content: [
+            {
+              type: "tool-result",
+              toolCallId: toolResult.toolCallId,
+              toolName: toolResult.toolName,
+              output: { type: "json", value: toolResult.result },
+            },
+          ],
+        });
+      }
+    }
+
+    if (result.reasoning) {
+      const reasoningText = Array.isArray(result.reasoning)
+        ? result.reasoning.map((r: any) => r.text).join("\n")
+        : result.reasoning;
+
       session.messages.push({
         role: "assistant",
-        content: [
-          {
-            type: "tool-call",
-            toolCallId: toolCall.toolCallId,
-            toolName: toolCall.toolName,
-            input: toolCall.args,
-          },
-        ],
+        content: [{ type: "reasoning", text: reasoningText }],
       });
+      if (verbose === 1) {
+        process.stdout.write(chalk.gray(reasoningText) + "\n");
+      }
     }
 
-    for (const toolResult of step.toolResults) {
+    if (result.text) {
       session.messages.push({
-        role: "tool",
-        content: [
-          {
-            type: "tool-result",
-            toolCallId: toolResult.toolCallId,
-            toolName: toolResult.toolName,
-            output: { type: "json", value: toolResult.result },
-          },
-        ],
+        role: "assistant",
+        content: [{ type: "text", text: result.text }],
       });
     }
-  }
 
-  if (result.reasoning) {
-    const reasoningText = Array.isArray(result.reasoning)
-      ? result.reasoning.map((r: any) => r.text).join("\n")
-      : result.reasoning;
+    session.updatedAt = new Date().toISOString();
+    await saveSession(session);
 
-    session.messages.push({
-      role: "assistant",
-      content: [{ type: "reasoning", text: reasoningText }],
-    });
-    if (verbose === 1) {
-      process.stdout.write(chalk.gray(reasoningText) + "\n");
+    if (result.finishReason === "stop") {
+      return result.text;
     }
   }
-
-  if (result.text) {
-    session.messages.push({
-      role: "assistant",
-      content: [{ type: "text", text: result.text }],
-    });
-  }
-
-  session.updatedAt = new Date().toISOString();
-  await saveSession(session);
-
-  return result.text;
 }

@@ -27,6 +27,7 @@ async function main() {
     .option("-c, --continue", "Continue from the latest session")
     .option("-s, --session <id>", "Session ID to resume")
     .option("-f, --fork", "Fork the session")
+    .option("-g, --generate", "Use runAgentGenerateText instead of runAgentStreamText")
     .option("-v, --verbose <level>", "Verbose level (0: text only, 1: full), defaults to 1", "1")
     .argument("[args...]", "Prompt to the agent (starts with /agentName to specify agent, defaults to /code)")
     .action(async (args, options) => {
@@ -115,7 +116,11 @@ async function main() {
           console.log(chalk.blue(`Tools: ${toolsList.map(t => t.id).join(", ")}`));
         }
 
-        await runAgentStreamText(config, session, systemPrompt, toolsList, verbose);
+        if (options.generate) {
+          await runAgentGenerateText(config, session, systemPrompt, toolsList, verbose);
+        } else {
+          await runAgentStreamText(config, session, systemPrompt, toolsList, verbose);
+        }
       } catch (error: any) {
         console.error(chalk.red(`\nError: ${error.message}`));
       }
