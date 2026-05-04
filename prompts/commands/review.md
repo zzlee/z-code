@@ -1,6 +1,6 @@
 ---
 description: Summarize the codebase architecture and key components
-agent: default
+agent: code
 tool: ['read', 'glob', 'grep']
 ---
 
