@@ -43,7 +43,7 @@ function getTools(toolsList: any[], session: Session) {
   return toolsList.reduce((acc, toolDef) => {
     acc[toolDef.id] = tool({
       description: toolDef.description,
-      parameters: toolDef.parameters,
+      inputSchema: toolDef.parameters,
       execute: async (args: any) => {
         try {
           const result = await toolDef.execute(args, {
@@ -76,6 +76,7 @@ export async function runAgentStreamText(
   let model = getModel(config);
   const tools = getTools(toolsList, session);
 
+  // console.log(`systemPrompt ==> ${systemPrompt}}`);
   // console.log(`tools ==> ${JSON.stringify(tools)}`);
 
   for (let iter = 0;; iter++) {
@@ -107,13 +108,13 @@ export async function runAgentStreamText(
         }
         case 'tool-call': {
           if (verbose === 1) {
-            process.stdout.write(chalk.blue(` [${part.toolName}] `));
+            process.stdout.write(chalk.blue(`[${part.toolName}]`));
           }
           break;
         }
         case 'tool-result': {
           if (verbose === 1) {
-            process.stdout.write(chalk.green(` [${part.toolName}] `));
+            process.stdout.write(chalk.green(`[${part.toolName}]`));
           }
          break;
         }
@@ -174,13 +175,13 @@ export async function runAgentGenerateText(
 
             case 'tool-call':
               if (verbose === 1) {
-                console.log(chalk.blue(` [${part.toolName}] `));
+                console.log(chalk.blue(`[${part.toolName}]`));
               }
               break;
 
             case 'tool-result':
               if (verbose === 1) {
-                console.log(chalk.green(` [${part.toolName}] `));
+                console.log(chalk.green(`[${part.toolName}]`));
               }
               break;
           }

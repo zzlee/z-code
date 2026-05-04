@@ -135,7 +135,7 @@ async function main() {
        let { agentName: actualAgentName, systemPrompt, commandPrompt, tools: toolFilter } = loadPrompt(agentName);
 
        if (options.loadSkill && options.loadSkill.length > 0) {
-         let skillSnippets = "\n\n# Loaded Skills\n";
+         let skillSnippets = "\n\n<skills>\n";
          for (const skillName of options.loadSkill) {
            try {
              const skill = await loadSkill(skillName);
@@ -145,7 +145,7 @@ async function main() {
              process.exit(1);
            }
          }
-         systemPrompt += skillSnippets;
+         systemPrompt += skillSnippets + "</skills>\n";
        }
 
        let userPrompt = argsToProcess.join(" ").trim();

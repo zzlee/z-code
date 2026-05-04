@@ -82,6 +82,8 @@ export async function loadSkillData(filePath: string): Promise<SkillData> {
 export async function loadSkill(skillPathOrName: string): Promise<Skill> {
   const candidates: string[] = [];
 
+  // console.log(`skillPathOrName=${skillPathOrName}`);
+
   if (path.isAbsolute(skillPathOrName)) {
     candidates.push(skillPathOrName);
   } else {

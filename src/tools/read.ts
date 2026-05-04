@@ -33,8 +33,6 @@ export const ReadTool: ToolDef<typeof parameters> = {
   description: loadDescription(),
   parameters,
   async execute(params, ctx) {
-
-
     if (params.offset !== undefined && params.offset < 1) {
       throw new Error("offset must be greater than or equal to 1");
     }
