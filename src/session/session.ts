@@ -97,7 +97,16 @@ export function formatSessionToMarkdown(session: Session): string {
         markdown += `### ⚙️ System\n${m.content}\n\n`;
         break;
       case "user":
-        markdown += `### 👤 User\n${m.content}\n\n`;
+        markdown += `### 👤 User\n`;
+        if (Array.isArray(m.content)) {
+          m.content.forEach((part: any) => {
+            if (part.type === "text") {
+              markdown += `${part.text}\n\n`;
+            }
+          });
+        } else {
+          markdown += `**💬 Response**${m.content}\n\n`;
+        }
         break;
       case "assistant":
         markdown += `### 🤖 Assistant\n`;
@@ -108,7 +117,7 @@ export function formatSessionToMarkdown(session: Session): string {
             } else if (part.type === "reasoning") {
               markdown += `**💭 Thoughts**\n${part.text}\n\n`;
             } else if (part.type === "tool-call") {
-              markdown += `**🛠️ Tool Call**: \`${part.toolName}(${JSON.stringify(part.args)})\`\n\n`;
+              markdown += `**🛠️ Tool Call**: \`${part.toolName}(${JSON.stringify(part.input)})\`\n\n`;
             }
           });
         } else {
@@ -116,7 +125,15 @@ export function formatSessionToMarkdown(session: Session): string {
         }
         break;
       case "tool":
-        markdown += `**⚙️ Tool Result**\n\`\`\`json\n${m.content}\n\`\`\`\n\n`;
+        if (Array.isArray(m.content)) {
+          m.content.forEach((part: any) => {
+            if (part.type === "tool-result") {
+              markdown += `**⚙️ Tool Result**: ${part.toolName}\n\`\`\`json\n${JSON.stringify(part.output.value.content)}\n\`\`\`\n\n`;
+            }
+          });
+        } else {
+          markdown += `**⚙️ Tool Result**\n${m.content}\n\n`;
+        }
         break;
     }
   });
