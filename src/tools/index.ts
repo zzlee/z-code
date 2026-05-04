@@ -25,8 +25,7 @@ export function getToolsList(toolFilter?: string[]) {
     GlobTool,
     EditTool,
     GrepTool,
-    LoadSkillTool,
-    ApplyPatchTool
+    LoadSkillTool
   ].filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
 
   return toolsList;
