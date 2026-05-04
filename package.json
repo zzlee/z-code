@@ -4,6 +4,9 @@
   "description": "AI Coding agent CLI tool",
   "main": "src/index.ts",
   "type": "module",
+  "bin": {
+    "z-code": "./dist/index.js"
+  },
   "scripts": {
     "build": "rm -rf dist && tsc && cp ./src/tools/*.txt dist/tools/ && cp ./prompts dist/agent -rf && chmod +x dist/index.js",
     "start": "node dist/index.js",

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Command } from "commander";
 import readline from "readline";
 import fs from "fs-extra";
@@ -34,8 +36,10 @@ async function main() {
     .option("-c, --continue", "Continue from the latest session")
     .option("-s, --session <id>", "Session ID to resume")
     .option("-f, --fork", "Fork the session")
+    .option("-v, --verbose <level>", "Verbose level (0: text only, 1: full), defaults to 1", "1")
     .argument("[args...]", "Prompt to the agent (starts with /agentName to specify agent, defaults to /code)")
     .action(async (args, options) => {
+      const verbose = options.verbose === "1" ? 1 : 0;
       let agentName = "code";
       let argsToProcess = args;
       if (args.length > 0 && args[0].startsWith("/")) {
@@ -71,9 +75,13 @@ async function main() {
           sessions.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
           session = sessions[0];
           isContinuing = true;
-          console.log(chalk.blue(`Resuming latest session: ${session.id}`));
+          if (verbose === 1) {
+            console.log(chalk.blue(`Resuming latest session: ${session.id}`));
+          }
         } else {
-          console.log(chalk.yellow("No previous session found to continue. Starting a new session."));
+          if (verbose === 1) {
+            console.log(chalk.yellow("No previous session found to continue. Starting a new session."));
+          }
         }
       }
 
@@ -85,7 +93,9 @@ async function main() {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        console.log(chalk.blue(`Forked session ${oldId} -> new session ${session.id}`));
+          if (verbose === 1) {
+            console.log(chalk.blue(`Forked session ${oldId} -> new session ${session.id}`));
+          }
       } else if (!session) {
         session = {
           id: createSessionId(),
@@ -95,7 +105,9 @@ async function main() {
         };
       }
 
-      console.log(chalk.blue(`Session ID: ${session.id}`));
+      if (verbose === 1) {
+        console.log(chalk.blue(`Session ID: ${session.id}`));
+      }
 
       if (finalUserPrompt.trim() !== "") {
         session.messages.push({ role: "user", content: [ { type: "text", text: finalUserPrompt } ] });
@@ -115,8 +127,10 @@ async function main() {
           ApplyPatchTool,
         ].filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
 
-        console.log(chalk.blue(`Agent: ${actualAgentName}`));
-        console.log(chalk.blue(`Tools: ${toolsList.map(t => t.id).join(", ")}`));
+        if (verbose === 1) {
+          console.log(chalk.blue(`Agent: ${actualAgentName}`));
+          console.log(chalk.blue(`Tools: ${toolsList.map(t => t.id).join(", ")}`));
+        }
 
         const tools = toolsList.reduce((acc, toolDef) => {
           acc[toolDef.id] = tool({
@@ -146,10 +160,7 @@ async function main() {
           return acc;
         }, {} as any);
 
-
-        await runAgentStreamText(config, session, systemPrompt, tools);
-        await saveSession(session);
-
+        await runAgentStreamText(config, session, systemPrompt, tools, verbose);
       } catch (error: any) {
         console.error(chalk.red(`\nError: ${error.message}`));
       }

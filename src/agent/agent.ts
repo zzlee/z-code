@@ -37,7 +37,8 @@ export async function runAgentStreamText(
   config: Config,
   session: Session,
   systemPrompt: string,
-  tools: ToolSet
+  tools: ToolSet,
+  verbose: number
 ) {
   let model = getModel(config);
 
@@ -85,7 +86,9 @@ export async function runAgentStreamText(
         }
         case 'reasoning-delta': {
           fullText += part.text;
-          process.stdout.write(chalk.gray(part.text));
+          if (verbose === 1) {
+            process.stdout.write(chalk.gray(part.text));
+          }
           break;
         }
         case 'reasoning-end': {
@@ -93,7 +96,9 @@ export async function runAgentStreamText(
             type: 'reasoning',
             text: fullText
           } ] });
-          process.stdout.write("\n");
+          if (verbose === 1) {
+            process.stdout.write("\n");
+          }
           break;
         }
         case 'source': {

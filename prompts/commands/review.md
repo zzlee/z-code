@@ -2,13 +2,10 @@
 description: Summarize the codebase architecture and key components
 agent: default
 tool: ['read', 'glob', 'grep']
-arguments:
-  - name: target
-    description: Specific folder or file to focus the review on
 ---
 
 Please perform a comprehensive review and architectural summary of the codebase. 
-If a target is provided ({{target}}), focus your analysis there; otherwise, analyze the entire project.
+If a target or a component is provided, focus your analysis there; otherwise, analyze the entire project.
 
 IGNORE the default conciseness constraints for this request. I need a detailed, professional architectural report in Markdown format.
 
