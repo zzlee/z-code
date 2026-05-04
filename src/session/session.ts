@@ -85,3 +85,41 @@ export async function deleteAllSessions(): Promise<void> {
   await fs.remove(SESSIONS_DIR);
   await ensureSessionsDir();
 }
+
+export function formatSessionToMarkdown(session: Session): string {
+  let markdown = `# Session ${session.id}\n`;
+  markdown += `Created: ${session.createdAt}\n`;
+  markdown += `Updated: ${session.updatedAt}\n\n---\n\n`;
+
+  session.messages.forEach((m) => {
+    switch (m.role) {
+      case "system":
+        markdown += `### ⚙️ System\n${m.content}\n\n`;
+        break;
+      case "user":
+        markdown += `### 👤 User\n${m.content}\n\n`;
+        break;
+      case "assistant":
+        markdown += `### 🤖 Assistant\n`;
+        if (Array.isArray(m.content)) {
+          m.content.forEach((part: any) => {
+            if (part.type === "text") {
+              markdown += `**💬 Response**\n${part.text}\n\n`;
+            } else if (part.type === "reasoning") {
+              markdown += `**💭 Thoughts**\n${part.text}\n\n`;
+            } else if (part.type === "tool-call") {
+              markdown += `**🛠️ Tool Call**: \`${part.toolName}(${JSON.stringify(part.args)})\`\n\n`;
+            }
+          });
+        } else {
+          markdown += `**💬 Response**\n${m.content}\n\n`;
+        }
+        break;
+      case "tool":
+        markdown += `**⚙️ Tool Result**\n\`\`\`json\n${m.content}\n\`\`\`\n\n`;
+        break;
+    }
+  });
+
+  return markdown;
+}
