@@ -5,22 +5,13 @@ import readline from "readline";
 import fs from "fs-extra";
 import chalk from "chalk";
 import ora from "ora";
-import { tool } from "ai";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { loadConfig, saveConfig, Config } from "./config/config.js";
 import { loadSession, saveSession, createSessionId, listSessions, Messages, Session } from "./session/session.js";
 import { runAgentStreamText, runAgentGenerateText } from "./agent/agent.js";
 import { loadPrompt } from "./agent/prompt.js";
-import { 
-  BashTool, 
-  ReadTool, 
-  WriteTool, 
-  GlobTool, 
-  EditTool, 
-  GrepTool, 
-  ApplyPatchTool 
-} from "./tools/index.js";
+import { getToolsList } from "./tools/index.js";
 
 const program = new Command();
 
@@ -117,50 +108,14 @@ async function main() {
       }
 
       try {
-        const toolsList = [
-          BashTool,
-          ReadTool,
-          WriteTool,
-          GlobTool,
-          EditTool,
-          GrepTool,
-          ApplyPatchTool,
-        ].filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
+        const toolsList = getToolsList(toolFilter);
 
         if (verbose === 1) {
           console.log(chalk.blue(`Agent: ${actualAgentName}`));
           console.log(chalk.blue(`Tools: ${toolsList.map(t => t.id).join(", ")}`));
         }
 
-        const tools = toolsList.reduce((acc, toolDef) => {
-          acc[toolDef.id] = tool({
-            description: toolDef.description,
-            parameters: toolDef.parameters,
-            execute: async (args: any) => {
-              // console.log(`DEBUG: ${JSON.stringify(args)}`);
-
-              try {
-                const result = await toolDef.execute(args, {
-                  sessionID: session!.id,
-                  messageID: "",
-                  agent: "z-code"
-                });
-
-                return { content: result };
-              } catch (error: any) {
-                // console.error(chalk.red(`\nError: ${error.message}`));
-
-                return { content: {
-                  output: error.message,
-                  metadata: {},
-                } };
-              }
-            },
-          } as any);
-          return acc;
-        }, {} as any);
-
-        await runAgentStreamText(config, session, systemPrompt, tools, verbose);
+        await runAgentStreamText(config, session, systemPrompt, toolsList, verbose);
       } catch (error: any) {
         console.error(chalk.red(`\nError: ${error.message}`));
       }

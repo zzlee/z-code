@@ -1,9 +1,30 @@
 export * from "./types.js";
 export * from "./registry.js";
-export * from "./read.js";
-export * from "./bash.js";
-export * from "./glob.js";
-export * from "./edit.js";
-export * from "./grep.js";
-export * from "./write.js";
-export * from "./apply_patch.js";
+import { ReadTool } from "./read.js";
+export { ReadTool };
+import { BashTool } from "./bash.js";
+export { BashTool };
+import { GlobTool } from "./glob.js";
+export { GlobTool };
+import { EditTool } from "./edit.js";
+export { EditTool };
+import { GrepTool } from "./grep.js";
+export { GrepTool };
+import { WriteTool } from "./write.js";
+export { WriteTool };
+import { ApplyPatchTool } from "./apply_patch.js";
+export { ApplyPatchTool };
+
+export function getToolsList(toolFilter?: string[]) {
+  const toolsList = [
+    BashTool,
+    ReadTool,
+    WriteTool,
+    GlobTool,
+    EditTool,
+    GrepTool,
+    ApplyPatchTool,
+  ].filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
+
+  return toolsList;
+}
