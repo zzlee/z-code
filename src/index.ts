@@ -171,7 +171,7 @@ async function main() {
        }
 
        const fileRefs = argsToProcess.filter(arg => arg.startsWith("@"));
-       let userPrompt = argsToProcess.join(" ").trim();
+        let userPrompt = argsToProcess.filter(arg => !arg.startsWith("@")).join(" ").trim();
        const finalUserPrompt = commandPrompt ? commandPrompt + "\n\n" + userPrompt : userPrompt;
 
        const content: any[] = [];
