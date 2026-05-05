@@ -29,6 +29,7 @@ export function getToolsList(toolFilter?: string[]) {
     GlobTool,
     EditTool,
     GrepTool,
+    ApplyPatchTool,
     LoadSkillTool,
     WebSearchTool,
     WebFetchTool

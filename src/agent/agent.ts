@@ -101,6 +101,10 @@ export async function runAgentStreamText(
         case 'reasoning-start': {
           break;
         }
+        case 'reasoning-end': {
+          process.stdout.write("\n");
+          break;
+        }
         case 'reasoning-delta': {
           if (verbose === 1) {
             process.stdout.write(chalk.dim(part.text));
