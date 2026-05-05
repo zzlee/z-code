@@ -15,6 +15,28 @@ import { getToolsList } from "./tools/index.js";
 
 const program = new Command();
 
+function getMimeType(filePath: string) {
+  const ext = filePath.split('.').pop()?.toLowerCase();
+  const mimeMap: Record<string, string> = {
+    'ts': 'text/typescript',
+    'tsx': 'text/typescript',
+    'js': 'text/javascript',
+    'jsx': 'text/javascript',
+    'json': 'application/json',
+    'md': 'text/markdown',
+    'py': 'text/x-python',
+    'go': 'text/x-go',
+    'rs': 'text/x-rust',
+    'cpp': 'text/x-c++',
+    'c': 'text/x-c',
+    'h': 'text/x-c',
+    'txt': 'text/plain',
+    'yml': 'text/yaml',
+    'yaml': 'text/yaml',
+  };
+  return mimeMap[ext || ''] || 'application/octet-stream';
+}
+
 async function main() {
   program
     .name("z-code")
@@ -37,7 +59,7 @@ async function main() {
     .option("--show-session [id]", "Display session history in markdown format")
     .option("--load-skill <name>", "Load a skill", (val, prev: string[]) => prev.concat([val]), [])
     .argument("[args...]", "Prompt to the agent (starts with /agentName to specify agent, defaults to /code)")
-    .action(async (args, options) => {
+    .action(async (args: string[], options: any) => {
        const verbose = options.verbose === "1" ? 1 : 0;
 
       if (options.listSessions) {
@@ -148,9 +170,28 @@ async function main() {
          systemPrompt += skillSnippets + "</skills>\n";
        }
 
+       const fileRefs = argsToProcess.filter(arg => arg.startsWith("@"));
        let userPrompt = argsToProcess.join(" ").trim();
-
        const finalUserPrompt = commandPrompt ? commandPrompt + "\n\n" + userPrompt : userPrompt;
+
+       const content: any[] = [];
+       if (finalUserPrompt.trim() !== "") {
+         content.push({ type: "text", text: finalUserPrompt });
+       }
+       for (const ref of fileRefs) {
+         const filePath = ref.substring(1);
+         try {
+            const data = await fs.readFile(filePath);
+           content.push({
+             type: "file",
+             data: data,
+             mediaType: getMimeType(filePath),
+           });
+         } catch (error: any) {
+           console.error(chalk.red(`Error reading file ${filePath}: ${error.message}`));
+           process.exit(1);
+         }
+       }
 
        const config = await loadConfig();
        if (!config) {
@@ -209,8 +250,8 @@ async function main() {
          console.log(chalk.blue(`Session ID: ${session.id}`));
        }
 
-       if (finalUserPrompt.trim() !== "") {
-         session.messages.push({ role: "user", content: [ { type: "text", text: finalUserPrompt } ] });
+       if (content.length > 0) {
+         session.messages.push({ role: "user", content });
        } else if (!isContinuing && session.messages.length === 0) {
          console.log(chalk.yellow("No prompt provided."));
          process.exit(0);

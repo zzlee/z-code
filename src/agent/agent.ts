@@ -109,13 +109,13 @@ export async function runAgentStreamText(
         }
         case 'tool-call': {
           if (verbose === 1) {
-            process.stdout.write(chalk.blue(`[${part.toolName}]`));
+            process.stdout.write(chalk.blue(`[${part.toolName}]\n`));
           }
           break;
         }
         case 'tool-result': {
           if (verbose === 1) {
-            process.stdout.write(chalk.green(`[${part.toolName}]`));
+            process.stdout.write(chalk.green(`[${part.toolName}]\n`));
           }
          break;
         }
