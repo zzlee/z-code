@@ -13,7 +13,15 @@ export { GrepTool };
 import { WriteTool } from "./write.js";
 export { WriteTool };
 import { LoadSkillTool } from "./load_skill.js";
+    WebSearchTool,
+    WebFetchTool
 export { LoadSkillTool };
+    WebSearchTool,
+    WebFetchTool
+import { WebSearchTool } from "./web_search.js";
+export { WebSearchTool };
+import { WebFetchTool } from "./web_fetch.js";
+export { WebFetchTool };
 import { ApplyPatchTool } from "./apply_patch.js";
 export { ApplyPatchTool };
 
@@ -26,6 +34,8 @@ export function getToolsList(toolFilter?: string[]) {
     EditTool,
     GrepTool,
     LoadSkillTool
+    WebSearchTool,
+    WebFetchTool
   ].filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
 
   return toolsList;
