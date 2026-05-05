@@ -1,6 +1,6 @@
 ---
 description: Translate any language to Traditional Chinese (zh-TW)
-agent: default
+agent: lang
 tool: []
 ---
 

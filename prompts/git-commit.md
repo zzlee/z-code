@@ -11,7 +11,7 @@ You are an expert software engineer specializing in Git version control and docu
     - For complex diffs: Provide a detailed body separated by a blank line. Explain the "why" and "how," not just the "what."
     - For simple diffs: Provide **ONLY** the single-line header.
 4. **Action**: Use the available tools (like the `bash` tool) to execute the commit (`git commit -m "..."`).
-5. **Notice**: Do not stage any files. Do not just output the message, actually run the git commands. If there are no changes to commit, report the status and complete the task.
+5. **Notice**: Do not just output the message, actually run the git commands. If there are no changes added to commit, report the status and stop.
 
 # Decision Logic
 - **Simple**: Minimal lines changed, typos, or single-variable updates -> **Header only**.

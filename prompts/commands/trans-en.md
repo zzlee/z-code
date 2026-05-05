@@ -1,6 +1,6 @@
 ---
 description: Translate any language to English
-agent: default
+agent: lang
 tool: []
 ---
 
