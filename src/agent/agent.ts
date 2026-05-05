@@ -1,11 +1,14 @@
 import chalk from "chalk";
 import ora from "ora";
-import { streamText, generateText, ToolSet, tool } from "ai";
+import { streamText, generateText, ToolSet, tool, jsonSchema } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOllama } from "ollama-ai-provider-v2";
 import { Config } from "../config/config.js";
 import { saveSession, Messages, Session } from "../session/session.js";
+
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 function getModel(
   config: Config) {
@@ -43,7 +46,7 @@ function getTools(toolsList: any[], session: Session) {
   return toolsList.reduce((acc, toolDef) => {
     acc[toolDef.id] = tool({
       description: toolDef.description,
-      inputSchema: toolDef.parameters,
+      parameters: toolDef.parameters,
       execute: async (args: any) => {
         try {
           const result = await toolDef.execute(args, {
@@ -67,6 +70,69 @@ function getTools(toolsList: any[], session: Session) {
   }, {} as any);
 }
 
+async function setupMcpTools(config: Config) {
+  const mcpTools: Record<string, any> = {};
+  const cleanupFunctions: Array<() => Promise<void>> = [];
+
+  if (!config.mcp_servers) {
+    return { mcpTools, cleanupFunctions };
+  }
+
+  for (const [serverName, serverConfig] of Object.entries(config.mcp_servers)) {
+    try {
+      const transport = new StdioClientTransport({
+        command: serverConfig.command,
+        args: serverConfig.args,
+        env: { ...process.env, ...serverConfig.env } as any,
+      });
+
+      const client = new Client(
+        { name: "z-code", version: "0.1.0" },
+        { capabilities: {} }
+      );
+
+      await client.connect(transport);
+
+      cleanupFunctions.push(async () => {
+        try {
+          await client.close();
+        } catch (e) {
+          // Ignore close errors
+        }
+      });
+
+      const tools = await client.listTools();
+
+      for (const t of tools.tools) {
+        const toolName = `${serverName}_${t.name}`;
+        mcpTools[toolName] = tool({
+          description: t.description || `Tool ${t.name} from MCP server ${serverName}`,
+          parameters: jsonSchema(t.inputSchema as any),
+          execute: async (args: any) => {
+            try {
+              const result = await client.callTool({
+                name: t.name,
+                arguments: args,
+              });
+              return { content: result };
+            } catch (error: any) {
+              return {
+                content: {
+                  output: error.message,
+                },
+              };
+            }
+          },
+        } as any);
+      }
+    } catch (error: any) {
+      console.error(chalk.yellow(`Failed to initialize MCP server ${serverName}: ${error.message}`));
+    }
+  }
+
+  return { mcpTools, cleanupFunctions };
+}
+
 export async function runAgentStreamText(
   config: Config,
   session: Session,
@@ -75,18 +141,21 @@ export async function runAgentStreamText(
   verbose: number = 0
 ) {
   let model = getModel(config);
-  const tools = getTools(toolsList, session);
+  let tools = getTools(toolsList, session);
+  const { mcpTools, cleanupFunctions } = await setupMcpTools(config);
+  tools = { ...tools, ...mcpTools };
 
   // console.log(`systemPrompt ==> ${systemPrompt}}`);
   // console.log(`tools ==> ${JSON.stringify(tools)}`);
 
-  for (let iter = 0;; iter++) {
-    const result = await streamText({
-      model,
-      system: systemPrompt,
-      messages: session.messages,
-      tools: tools,
-    } as any);
+  try {
+    for (let iter = 0;; iter++) {
+      const result = await streamText({
+        model,
+        system: systemPrompt,
+        messages: session.messages,
+        tools: tools,
+      } as any);
 
     for await (const part of result.fullStream) {
       switch (part.type) {
@@ -133,8 +202,13 @@ export async function runAgentStreamText(
     session.updatedAt = new Date().toISOString();
     await saveSession(session);
 
-    if(await result.finishReason == "stop") {
-      break;
+      if(await result.finishReason == "stop") {
+        break;
+      }
+    }
+  } finally {
+    for (const cleanup of cleanupFunctions) {
+      await cleanup();
     }
   }
 }
@@ -147,16 +221,19 @@ export async function runAgentGenerateText(
   verbose: number = 0
 ) {
   const model = getModel(config);
-  const tools = getTools(toolsList, session);
+  let tools = getTools(toolsList, session);
+  const { mcpTools, cleanupFunctions } = await setupMcpTools(config);
+  tools = { ...tools, ...mcpTools };
 
-  for (let iter = 0;; iter++) {
-    const result = await generateText({
-      model,
-      system: systemPrompt,
-      messages: session.messages,
-      tools: tools,
-      maxSteps: 1,
-    } as any) as any;
+  try {
+    for (let iter = 0;; iter++) {
+      const result = await generateText({
+        model,
+        system: systemPrompt,
+        messages: session.messages,
+        tools: tools,
+        maxSteps: 1,
+      } as any) as any;
 
     for (const message of result.response.messages) {
       if (typeof message.content === 'string') {
@@ -197,8 +274,13 @@ export async function runAgentGenerateText(
     session.updatedAt = new Date().toISOString();
     await saveSession(session);
 
-    if (result.finishReason === "stop") {
-      return result.text;
+      if (result.finishReason === "stop") {
+        return result.text;
+      }
+    }
+  } finally {
+    for (const cleanup of cleanupFunctions) {
+      await cleanup();
     }
   }
 }

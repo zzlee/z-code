@@ -15,10 +15,19 @@ export const ProviderSchema = z.object({
 
 export type ProviderConfig = z.infer<typeof ProviderSchema>;
 
+export const McpServerSchema = z.object({
+  command: z.string(),
+  args: z.array(z.string()),
+  env: z.record(z.string(), z.string()).optional(),
+});
+
+export type McpServerConfig = z.infer<typeof McpServerSchema>;
+
 export const ConfigSchema = z.object({
   default_provider: z.string(),
   streaming: z.boolean().optional(),
   providers: z.record(z.string(), ProviderSchema),
+  mcp_servers: z.record(z.string(), McpServerSchema).optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
