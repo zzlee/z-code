@@ -102,7 +102,9 @@ export async function runAgentStreamText(
           break;
         }
         case 'reasoning-end': {
-          process.stdout.write("\n");
+          if (verbose === 1) {
+            process.stdout.write("\n");
+          }
           break;
         }
         case 'reasoning-delta': {
@@ -111,15 +113,23 @@ export async function runAgentStreamText(
           }
           break;
         }
+        case 'tool-input-start': {
+          if (verbose === 1) {
+            process.stdout.write("\n");
+          }
+          break;
+        }
         case 'tool-call': {
           if (verbose === 1) {
-            process.stdout.write(chalk.blue(`\n[${part.toolName}]`));
+            process.stdout.write(chalk.blue(`[${part.toolName}${part.input ? ' ' + Object.values(part.input).join(' ') : ''}]\n`));
           }
           break;
         }
         case 'tool-result': {
           if (verbose === 1) {
-            process.stdout.write(chalk.green(`[${part.toolName}]\n`));
+            const result = part.output ? (typeof part.output === 'string' ? part.output : JSON.stringify(part.output)) : '';
+            const conciseResult = result.length > 50 ? result.substring(0, 50) + '...' : result;
+            process.stdout.write(chalk.green(`[${part.toolName}] ${conciseResult}\n`));
           }
          break;
         }
@@ -180,13 +190,16 @@ export async function runAgentGenerateText(
 
             case 'tool-call':
               if (verbose === 1) {
-                process.stdout.write(chalk.blue(`[${part.toolName}]`));
+                const args = part.input ? Object.values(part.input).join(' ') : '';
+                process.stdout.write(chalk.blue(`[${part.toolName}${args ? ' ' + args : ''}]`));
               }
               break;
 
             case 'tool-result':
               if (verbose === 1) {
-                process.stdout.write(chalk.green(`[${part.toolName}]\n`));
+                const result = part.output ? (typeof part.output === 'string' ? part.output : JSON.stringify(part.output)) : '';
+                const conciseResult = result.length > 50 ? result.substring(0, 50) + '...' : result;
+                process.stdout.write(chalk.green(`[${part.toolName}] ${conciseResult}\n`));
               }
               break;
           }
