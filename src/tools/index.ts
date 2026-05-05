@@ -18,8 +18,6 @@ import { WebSearchTool } from "./web_search.js";
 export { WebSearchTool };
 import { WebFetchTool } from "./web_fetch.js";
 export { WebFetchTool };
-import { ApplyPatchTool } from "./apply_patch.js";
-export { ApplyPatchTool };
 
 export function getToolsList(toolFilter?: string[]) {
   const toolsList = [
@@ -29,7 +27,6 @@ export function getToolsList(toolFilter?: string[]) {
     GlobTool,
     EditTool,
     GrepTool,
-    ApplyPatchTool,
     LoadSkillTool,
     WebSearchTool,
     WebFetchTool
