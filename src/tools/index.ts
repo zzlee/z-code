@@ -14,6 +14,8 @@ import { WriteTool } from "./write.js";
 export { WriteTool };
 import { LoadSkillTool } from "./load_skill.js";
 export { LoadSkillTool };
+import { ApplyPatchTool } from "./apply_patch.js";
+export { ApplyPatchTool };
 import { WebSearchTool } from "./web_search.js";
 export { WebSearchTool };
 import { WebFetchTool } from "./web_fetch.js";
@@ -24,6 +26,7 @@ export function getToolsList(toolFilter?: string[]) {
     BashTool,
     ReadTool,
     WriteTool,
+    ApplyPatchTool,
     GlobTool,
     EditTool,
     GrepTool,
