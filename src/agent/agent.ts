@@ -209,6 +209,10 @@ export async function runAgentStreamText(
     }
 
     let response = await result.response;
+    if (verbose >= 1 && result.totalUsage) {
+      const totalUsage = (await result.totalUsage) as any;
+      process.stdout.write(chalk.gray(`\n[Tokens: ${totalUsage.totalTokens ?? 0} (${totalUsage.inputTokens ?? 0}+${totalUsage.outputTokens ?? 0}) Resoning: ${totalUsage.reasoningTokens ?? 0} Cache: ${totalUsage.cachedInputTokens ?? 0}]\n`));
+    }
     response.messages.forEach((m: any) => {
       session.messages.push(m);
     });
@@ -282,6 +286,11 @@ export async function runAgentGenerateText(
           }
         }
       }
+    }
+
+    if (verbose >= 1 && result.totalUsage) {
+      const totalUsage = result.totalUsage as any;
+      process.stdout.write(chalk.gray(`\n[Tokens: ${totalUsage.totalTokens ?? 0} (${totalUsage.inputTokens ?? 0}+${totalUsage.outputTokens ?? 0}) Resoning: ${totalUsage.reasoningTokens ?? 0} Cache: ${totalUsage.cachedInputTokens ?? 0}]\n`));
     }
 
     result.response.messages.forEach((m: any) => {
