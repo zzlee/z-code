@@ -65,7 +65,12 @@ export function loadPrompt(agentName: string): { agentName: string; systemPrompt
     return content.replace(__yamlRegex, "").trim();
   };
 
-  const systemPrompt = readAndStripYaml(sysPromptPath);
+  let systemPrompt = readAndStripYaml(sysPromptPath);
+
+  const agentsMdPath = path.join(process.cwd(), "AGENTS.md");
+  if (fs.existsSync(agentsMdPath)) {
+    systemPrompt += "\n\n" + readAndStripYaml(agentsMdPath);
+  }
 
   return { agentName: actualAgentName, systemPrompt, commandPrompt, tools: metadata.tool };
 }
