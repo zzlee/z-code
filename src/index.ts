@@ -263,6 +263,9 @@ async function main() {
          if (verbose === 1) {
            console.log(chalk.blue(`Agent: ${actualAgentName}`));
            console.log(chalk.blue(`Tools: ${toolsList.map(t => t.id).join(", ")}`));
+           if (options.loadSkill && options.loadSkill.length > 0) {
+             console.log(chalk.blue(`Skills: ${options.loadSkill.join(", ")}`));
+           }
          }
 
          if (options.generate) {
