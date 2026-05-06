@@ -76,6 +76,12 @@ Example `config.json`:
 z-code "Explain the current project structure"
 ```
 
+### Referencing Files
+You can attach files to your prompt using the `@` symbol:
+```bash
+z-code "Review this file for bugs @src/index.ts"
+```
+
 ### Using Specific Agents
 Start your prompt with `/agentName` to use a specific agent:
 ```bash
