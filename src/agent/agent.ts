@@ -57,7 +57,7 @@ function getTools(toolsList: any[], session: Session) {
   return toolsList.reduce((acc, toolDef) => {
     acc[toolDef.id] = tool({
       description: toolDef.description,
-      parameters: toolDef.parameters,
+      inputSchema: toolDef.parameters,
       execute: async (args: any) => {
         try {
           const result = await toolDef.execute(args, {
@@ -118,7 +118,7 @@ async function setupMcpTools(config: Config) {
         const toolName = `${serverName}_${t.name}`;
         mcpTools[toolName] = tool({
           description: t.description || `Tool ${t.name} from MCP server ${serverName}`,
-          parameters: jsonSchema(t.inputSchema as any),
+          inputSchema: jsonSchema(t.inputSchema as any),
           execute: async (args: any) => {
             try {
               const result = await client.callTool({
