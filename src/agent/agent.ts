@@ -4,6 +4,7 @@ import { streamText, generateText, ToolSet, tool, jsonSchema } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOllama } from "ollama-ai-provider-v2";
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { Config } from "../config/config.js";
 import { saveSession, Messages, Session } from "../session/session.js";
 
@@ -31,6 +32,16 @@ function getModel(
       baseURL: providerConfig.baseUrl,
     });
     model = ollama(providerConfig.model as any);
+  } else if (providerConfig.provider === "openai-compatible") {
+    const nim = createOpenAICompatible({
+      name: 'nim',
+      baseURL: providerConfig.baseUrl ?? "",
+      headers: {
+        Authorization: `Bearer ${providerConfig.apiKey}`,
+      },
+      includeUsage: true,
+    });
+    model = nim.chatModel(providerConfig.model);
   } else {
     const provider = createOpenAI({
       apiKey: providerConfig.apiKey,
