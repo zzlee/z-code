@@ -43,7 +43,8 @@ export function getToolsList(toolFilter?: string[]) {
 
   const bashTools = [
     BashTool,
-    GlobTool
+    GlobTool,
+    GrepTool
   ];
 
   const webTools = [
