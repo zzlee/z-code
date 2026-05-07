@@ -201,13 +201,13 @@ export async function runAgentStreamText(
         }
         case 'tool-call': {
           if (verbose === 1) {
-            process.stdout.write(chalk.blue(`[${part.toolName}] ${part.input ? ' ' + Object.values(part.input).join(' ') : ''}\n`));
+            process.stdout.write(chalk.blue(`[${part.toolName}] ${part.input ? Object.values(part.input).join(',') : ''}\n`));
           }
           break;
         }
         case 'tool-result': {
           if (verbose === 1) {
-            const result = part.output ? (typeof part.output === 'string' ? part.output : JSON.stringify(part.output)) : '';
+            const result = part.output ? ((typeof part.output) === 'string' ? part.output : `${Object.values(part.output.content).join(',')}`) : '';
             const conciseResult = result.length > 50 ? result.substring(0, 50) + '...' : result;
             process.stdout.write(chalk.green(`[${part.toolName}] ${conciseResult}\n`));
           }
