@@ -1,9 +1,9 @@
-Use the `apply_patch` tool to edit files. Your patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:
+Edit files via a simplified diff format.
 
+Format:
 *** Begin Patch
 *** Add File: path/to/file.ts
-+ line 1
-+ line 2
++ new line
 
 *** Update File: path/to/existing.ts
 @@ context line
@@ -12,6 +12,9 @@ Use the `apply_patch` tool to edit files. Your patch language is a stripped‑do
 *** End of File
 
 *** Move to: path/to/new_location.ts
-
 *** Delete File: path/to/obsolete.ts
 *** End Patch
+
+Usage:
+- Safe for multi-file structural changes.
+- Ensure context lines in 'Update File' are accurate.
