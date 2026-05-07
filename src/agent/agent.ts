@@ -201,7 +201,7 @@ export async function runAgentStreamText(
         }
         case 'tool-call': {
           if (verbose === 1) {
-            process.stdout.write(chalk.blue(`[${part.toolName}${part.input ? ' ' + Object.values(part.input).join(' ') : ''}]\n`));
+            process.stdout.write(chalk.blue(`[${part.toolName}] ${part.input ? ' ' + Object.values(part.input).join(' ') : ''}\n`));
           }
           break;
         }
