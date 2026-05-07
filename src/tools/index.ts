@@ -22,7 +22,7 @@ import { WebFetchTool } from "./web_fetch.js";
 export { WebFetchTool };
 
 export function getToolsList(toolFilter?: string[]) {
-  const toolsList = [
+  const allTools = [
     BashTool,
     ReadTool,
     WriteTool,
@@ -33,7 +33,40 @@ export function getToolsList(toolFilter?: string[]) {
     LoadSkillTool,
     WebSearchTool,
     WebFetchTool
-  ].filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
+  ];
 
-  return toolsList;
+  const fileTools = [
+    ReadTool,
+    WriteTool,
+    EditTool
+  ];
+
+  const bashTools = [
+    BashTool,
+    GlobTool
+  ];
+
+  const webTools = [
+    WebSearchTool,
+    WebFetchTool
+  ];
+
+  const basicTools = [
+    ...fileTools,
+    ...bashTools
+  ];
+
+  const basicWithWebTools = [
+    ...basicTools,
+    ...webTools
+  ];
+
+  const basicWithSkillTools = [
+    ...basicTools,
+    LoadSkillTool
+  ];
+
+  const toolsList = basicTools;
+
+  return toolsList.filter(toolDef => !toolFilter || toolFilter.includes("*") || toolFilter.includes(toolDef.id));
 }
