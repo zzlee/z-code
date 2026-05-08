@@ -1,0 +1,5 @@
+Description: Executes standard Bash shell commands. This tool allows access to all GNU Coreutils and executables within the system path. It is suitable for file operations, text processing, system information queries, and complex pipeline data flow tasks.
+Parameters:
+- command (string, required): The complete command string to be executed in the Bash environment. Supports multi-line commands, pipes (|), redirection (> or <), and logical operators (&&, ||).
+Usage Example:
+{ "command": "find ./src -name '*.cpp' | xargs grep -l 'TODO'" }
