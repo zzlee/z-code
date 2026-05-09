@@ -57,7 +57,7 @@ export function loadPrompt(agentName: string): { agentName: string; systemPrompt
   const sysPromptPath = path.join(__dirname, "prompts", `${actualAgentName}.md`);
 
   if (!fs.existsSync(sysPromptPath)) {
-    throw new Error(`Fatal error: System prompt for agent '${actualAgentName}' not found at ${sysPromptPath}`);
+    throw new Error(`System prompt for agent '${actualAgentName}' not found at ${sysPromptPath}`);
   }
 
   const readAndStripYaml = (filePath: string): string => {

@@ -59,8 +59,10 @@ async function main() {
     .option("--show-session [id]", "Display session history in markdown format")
     .option("--load-skill <name>", "Load a skill", (val, prev: string[]) => prev.concat([val]), [])
     .argument("[args...]", "Prompt to the agent (starts with /agentName to specify agent, defaults to /code)")
-    .action(async (args: string[], options: any) => {
-       const verbose = options.verbose === "1" ? 1 : 0;
+      .action(async (args: string[], options: any) => {
+        try {
+          const verbose = options.verbose === "1" ? 1 : 0;
+
 
       if (options.listSessions) {
         const sessions = await listSessions();
@@ -273,15 +275,20 @@ async function main() {
          } else {
            await runAgentStreamText(config, session, systemPrompt, toolsList, verbose);
          }
-       } catch (error: any) {
-         console.error(chalk.red(`\nError: ${error.message}`));
-       }
-     });
+        } catch (error: any) {
+          console.error(chalk.red(`\nError: ${error.message}`));
+        }
+      } catch (error: any) {
+        console.error(chalk.red(`Fatal error: ${error.message}`));
+        process.exit(1);
+      }
+    });
+
 
    program.parse();
 }
 
 main().catch((error) => {
-  console.error(chalk.red("Fatal error:"), error);
+  console.error(chalk.red(`Fatal error: ${error.message}`));
   process.exit(1);
 });
