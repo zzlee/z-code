@@ -22,6 +22,8 @@ import { WebFetchTool } from "./web_fetch.js";
 export { WebFetchTool };
 import { ExecuteBashTool } from "./execute_bash.js";
 export { ExecuteBashTool };
+import { ChatHistoryCompactTool } from "./chat_history_compact.js";
+export { ChatHistoryCompactTool };
 
 export function getToolsList(toolFilter?: string[]) {
   const allTools = [
@@ -35,7 +37,8 @@ export function getToolsList(toolFilter?: string[]) {
     LoadSkillTool,
     WebSearchTool,
     WebFetchTool,
-    ExecuteBashTool
+    ExecuteBashTool,
+    ChatHistoryCompactTool
   ];
 
   const fileTools = [
@@ -67,12 +70,14 @@ export function getToolsList(toolFilter?: string[]) {
 
   const basicWithSkillTools = [
     ...basicTools,
-    LoadSkillTool
+    LoadSkillTool,
+    ChatHistoryCompactTool
   ];
 
   const bashOnlyTools = [
     ExecuteBashTool,
-    LoadSkillTool
+    LoadSkillTool,
+    ChatHistoryCompactTool
   ];
 
   if(! toolFilter || toolFilter.includes('*')) {

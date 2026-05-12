@@ -64,6 +64,7 @@ function getTools(toolsList: any[], session: Session) {
             sessionID: session.id,
             messageID: "",
             agent: "z-code",
+            extra: { session },
           });
 
           return { content: result };
