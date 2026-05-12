@@ -33,6 +33,19 @@ function getMimeType(filePath: string) {
     'txt': 'text/plain',
     'yml': 'text/yaml',
     'yaml': 'text/yaml',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml',
+    'ico': 'image/x-icon',
+    'mp3': 'audio/mpeg',
+    'wav': 'audio/wav',
+    'ogg': 'audio/ogg',
+    'mp4': 'video/mp4',
+    'webm': 'video/webm',
+    'pdf': 'application/pdf',
   };
   return mimeMap[ext || ''] || 'application/octet-stream';
 }
@@ -196,12 +209,26 @@ async function main() {
        for (const ref of fileRefs) {
          const filePath = ref.substring(1);
          try {
-            const data = await fs.readFile(filePath);
-           content.push({
-             type: "file",
-             data: data,
-             mediaType: getMimeType(filePath),
-           });
+           const mediaType = getMimeType(filePath);
+           const data = await fs.readFile(filePath);
+
+           if (mediaType.startsWith("text/") || mediaType === "application/json") {
+             content.push({
+               type: "text",
+               text: `${filePath}:\n\`\`\`\n${data.toString("utf-8")}\n\`\`\``,
+             });
+           } else if (mediaType.startsWith("image/")) {
+             content.push({
+               type: "image",
+               image: `data:${mediaType};base64,${data.toString("base64")}`,
+             });
+           } else {
+             content.push({
+               type: "file",
+               data: `data:${mediaType};base64,${data.toString("base64")}`,
+               mediaType,
+             });
+           }
          } catch (error: any) {
            console.error(chalk.red(`Error reading file ${filePath}: ${error.message}`));
            process.exit(1);
