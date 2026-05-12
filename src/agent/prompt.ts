@@ -128,6 +128,75 @@ export async function loadSkill(skillPathOrName: string): Promise<Skill> {
   );
 }
 
+export interface AgentInfo {
+  name: string;
+  description: string;
+}
+
+export async function listAgents(): Promise<AgentInfo[]> {
+  const promptsDir = path.join(__dirname, "prompts");
+  const commandsDir = path.join(promptsDir, "commands");
+
+  // Read all files from both directories
+  let promptFiles: string[] = [];
+  let commandFiles: string[] = [];
+
+  try {
+    const allEntries = await fs.readdir(promptsDir);
+    promptFiles = allEntries.filter(
+      (f) => f.endsWith(".md") && f !== "commands"
+    );
+  } catch {
+    // Directory doesn't exist
+  }
+
+  try {
+    commandFiles = await fs.readdir(commandsDir);
+    commandFiles = commandFiles.filter((f) => f.endsWith(".md"));
+  } catch {
+    // Directory doesn't exist
+  }
+
+  const agentMap = new Map<string, string>();
+
+  // Helper to read YAML description from a file
+  const readDescription = (filePath: string): string => {
+    try {
+      const content = fs.readFileSync(filePath, "utf-8");
+      const match = content.match(__yamlRegex);
+      if (match) {
+        const metadata = parseYaml(match[1]);
+        return metadata.description || "";
+      }
+    } catch {
+      // Ignore read errors
+    }
+    return "";
+  };
+
+  // Process command files first (they take precedence)
+  for (const file of commandFiles) {
+    const name = path.basename(file, ".md");
+    const filePath = path.join(commandsDir, file);
+    const description = readDescription(filePath);
+    agentMap.set(name, description);
+  }
+
+  // Process prompt files, only add if not already defined by a command file
+  for (const file of promptFiles) {
+    const name = path.basename(file, ".md");
+    if (!agentMap.has(name)) {
+      const filePath = path.join(promptsDir, file);
+      const description = readDescription(filePath);
+      agentMap.set(name, description);
+    }
+  }
+
+  return Array.from(agentMap.entries())
+    .map(([name, description]) => ({ name, description }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export async function listSkills(): Promise<Skill[]> {
   const searchDirs = [
     path.join(process.cwd(), "skills"),

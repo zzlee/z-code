@@ -10,7 +10,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { loadConfig, saveConfig, Config } from "./config/config.js";
 import { loadSession, saveSession, createSessionId, listSessions, deleteSession, deleteAllSessions, Messages, Session, formatSessionToMarkdown } from "./session/session.js";
 import { runAgentStreamText, runAgentGenerateText } from "./agent/agent.js";
-import { loadPrompt, listSkills, loadSkill } from "./agent/prompt.js";
+import { loadPrompt, listSkills, loadSkill, listAgents } from "./agent/prompt.js";
 import { getToolsList } from "./tools/index.js";
 
 const program = new Command();
@@ -54,6 +54,7 @@ async function main() {
     .option("--list-sessions", "List all sessions")
     .option("--delete-all-sessions", "Delete all sessions")
     .option("--delete-session <id>", "Delete a specific session")
+    .option("--list-agents", "List all available agents")
     .option("--list-skills", "List all available skills")
     .option("--show-skill <name>", "Show details of a specific skill")
     .option("--show-session [id]", "Display session history in markdown format")
@@ -88,6 +89,20 @@ async function main() {
           console.log(chalk.green(`Session ${options.deleteSession} deleted.`));
         } else {
           console.error(chalk.red(`Session ${options.deleteSession} not found.`));
+        }
+        process.exit(0);
+      }
+
+      if (options.listAgents) {
+        const agents = await listAgents();
+        if (agents.length === 0) {
+          console.log(chalk.yellow("No agents found."));
+        } else {
+          console.log(chalk.blue("Available agents:"));
+          agents.forEach(a => {
+            const desc = a.description ? ` - ${a.description}` : "";
+            console.log(`  ${chalk.bold.cyan(a.name)}${desc}`);
+          });
         }
         process.exit(0);
       }
