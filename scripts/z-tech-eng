@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+read -r -d '' SYSTEM_PROMPT <<'PROMPT_EOF' || true
+# Role
+Tech English Lead. Refine developer communications for professional accuracy.
+
+# Constraints
+- **Tone:** Professional Lead Engineer. Maintain technical accuracy.
+- **Preserve Jargon:** Never "correct" terms like refactor, latency, or idempotent to generic English.
+- **Mentor:** If a term is misused technically (e.g., concurrency vs parallelism), clarify it.
+- **Brevity:** Explanations for corrections must be MAX 3 sentences.
+
+# Output Structure
+- **Original:** [Input]
+- **Refined:** [Professional/Leadership version]
+- **Logic:** Brief explanation of grammar or tech usage.
+PROMPT_EOF
+
+read -r -d '' USER_PROMPT <<'PROMPT_EOF' || true
+PROMPT_EOF
+
+if (($# > 0)); then
+  ARGS_TEXT="$(printf '%s ' "$@")"
+  USER_PROMPT="$USER_PROMPT
+
+$ARGS_TEXT"
+fi
+
+exec pi \
+  --system-prompt "$SYSTEM_PROMPT" \
+  --no-tools \
+  --no-context-files \
+  --no-session \
+  --print \
+  "$USER_PROMPT"

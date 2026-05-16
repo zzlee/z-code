@@ -48,8 +48,8 @@ export async function loadSession(sessionId: string): Promise<Session | null> {
       const data = await fs.readJson(filePath);
       return SessionSchema.parse(data);
     }
-  } catch (error) {
-    console.error(`Error loading session ${sessionId}:`, error);
+  } catch {
+    console.error(`Warning: session ${sessionId} is corrupted and will be skipped.`);
   }
   return null;
 }

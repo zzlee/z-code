@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+read -r -d '' SYSTEM_PROMPT <<'PROMPT_EOF' || true
+# Role
+Expert Git Specialist. Generate and execute Conventional Commits.
+
+# Constraints
+- **Action:** ALWAYS run `git commit -m "..."`. If no changes are staged, report status and stop.
+- **Format:** Conventional Commits (feat, fix, docs, refactor, test, chore).
+- **Header:** Imperative mood, MAX 50 characters.
+- **Body:** 
+    - Required for complex diffs (>10 lines or multi-file). Explain "why" and "how."
+    - Omit for simple diffs (typos, single-line updates).
+- **Verification:** Do not just output text; execute the actual command.
+PROMPT_EOF
+
+read -r -d '' USER_PROMPT <<'PROMPT_EOF' || true
+Use the `bash` tool to execute the `git commit` command with the generated message.
+PROMPT_EOF
+
+exec pi \
+  --system-prompt "$SYSTEM_PROMPT" \
+  --tools bash \
+  --no-context-files \
+  --no-session \
+  --print \
+  "$USER_PROMPT"

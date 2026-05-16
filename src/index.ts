@@ -10,7 +10,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { loadConfig, saveConfig, Config } from "./config/config.js";
 import { loadSession, saveSession, createSessionId, listSessions, deleteSession, deleteAllSessions, Messages, Session, formatSessionToMarkdown } from "./session/session.js";
 import { runAgentStreamText, runAgentGenerateText } from "./agent/agent.js";
-import { loadPrompt, listSkills, loadSkill } from "./agent/prompt.js";
+import { loadPrompt, listSkills, loadSkill, listAgents } from "./agent/prompt.js";
 import { getToolsList } from "./tools/index.js";
 
 const program = new Command();
@@ -33,6 +33,19 @@ function getMimeType(filePath: string) {
     'txt': 'text/plain',
     'yml': 'text/yaml',
     'yaml': 'text/yaml',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml',
+    'ico': 'image/x-icon',
+    'mp3': 'audio/mpeg',
+    'wav': 'audio/wav',
+    'ogg': 'audio/ogg',
+    'mp4': 'video/mp4',
+    'webm': 'video/webm',
+    'pdf': 'application/pdf',
   };
   return mimeMap[ext || ''] || 'application/octet-stream';
 }
@@ -54,6 +67,7 @@ async function main() {
     .option("--list-sessions", "List all sessions")
     .option("--delete-all-sessions", "Delete all sessions")
     .option("--delete-session <id>", "Delete a specific session")
+    .option("--list-agents", "List all available agents")
     .option("--list-skills", "List all available skills")
     .option("--show-skill <name>", "Show details of a specific skill")
     .option("--show-session [id]", "Display session history in markdown format")
@@ -90,6 +104,20 @@ async function main() {
           console.log(chalk.green(`Session ${options.deleteSession} deleted.`));
         } else {
           console.error(chalk.red(`Session ${options.deleteSession} not found.`));
+        }
+        process.exit(0);
+      }
+
+      if (options.listAgents) {
+        const agents = await listAgents();
+        if (agents.length === 0) {
+          console.log(chalk.yellow("No agents found."));
+        } else {
+          console.log(chalk.blue("Available agents:"));
+          agents.forEach(a => {
+            const desc = a.description ? ` - ${a.description}` : "";
+            console.log(`  ${chalk.bold.cyan(a.name)}${desc}`);
+          });
         }
         process.exit(0);
       }
@@ -183,12 +211,26 @@ async function main() {
        for (const ref of fileRefs) {
          const filePath = ref.substring(1);
          try {
-            const data = await fs.readFile(filePath);
-           content.push({
-             type: "file",
-             data: data,
-             mediaType: getMimeType(filePath),
-           });
+           const mediaType = getMimeType(filePath);
+           const data = await fs.readFile(filePath);
+
+           if (mediaType.startsWith("text/") || mediaType === "application/json") {
+             content.push({
+               type: "text",
+               text: `${filePath}:\n\`\`\`\n${data.toString("utf-8")}\n\`\`\``,
+             });
+           } else if (mediaType.startsWith("image/")) {
+             content.push({
+               type: "image",
+               image: `data:${mediaType};base64,${data.toString("base64")}`,
+             });
+           } else {
+             content.push({
+               type: "file",
+               data: `data:${mediaType};base64,${data.toString("base64")}`,
+               mediaType,
+             });
+           }
          } catch (error: any) {
            console.error(chalk.red(`Error reading file ${filePath}: ${error.message}`));
            process.exit(1);

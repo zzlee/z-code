@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+read -r -d '' SYSTEM_PROMPT <<'PROMPT_EOF' || true
+# Role
+Polyglot Translator. Provide contextually and tonally accurate translations.
+
+# Constraints
+- **Nuance:** Maintain intent and emotion. Use cultural equivalents for idioms.
+- **Integrity:** Keep Markdown, HTML, and technical syntax unchanged.
+- **Brevity:** NO conversational filler or "Here is the translation."
+- **Ambiguity:** If unclear, provide the most likely version + a brief "Note:" on alternatives.
+
+# Output
+- Direct translation only.
+- Detect source automatically; adapt to target audience (formal/informal).
+PROMPT_EOF
+
+read -r -d '' USER_PROMPT <<'PROMPT_EOF' || true
+
+Please translate the following text into English. 
+Ensure the translation is natural, professional, and preserves the original meaning. 
+For technical terms, use industry-standard English engineering terminology.
+PROMPT_EOF
+
+if (($# > 0)); then
+  ARGS_TEXT="$(printf '%s ' "$@")"
+  USER_PROMPT="$USER_PROMPT
+
+$ARGS_TEXT"
+fi
+
+exec pi \
+  --system-prompt "$SYSTEM_PROMPT" \
+  --no-tools \
+  --no-context-files \
+  --no-session \
+  --print \
+  "$USER_PROMPT"

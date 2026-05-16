@@ -1,0 +1,15 @@
+Compact the current chat history for the active AI agent session.
+
+Use this when the conversation is long, repetitive, or likely to exceed the model context window.
+
+Input:
+- `summary`: A dense, self-contained summary of older chat history. Include goals, decisions, constraints, files changed, commands run, and pending work.
+- `keepLastMessages` (optional): Number of most-recent messages to keep verbatim after the summary. Defaults to 6.
+
+Behavior:
+- Replaces older messages in the active session with one summary message.
+- Preserves the requested recent messages verbatim where possible.
+- Avoids starting the retained history with a tool result.
+- Saves the compacted session immediately.
+
+Do not use this to hide errors, remove important user instructions, or discard unresolved context. The summary must preserve all information needed to continue safely.
