@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""Run a command with environment variables loaded from ~/.env.
+
+Usage:
+  z-dotenv env | grep XXX_API_KEY
+  z-dotenv -- sh -c 'echo "$XXX_API_KEY"'
+
+Set Z_DOTENV_FILE=/path/to/.env to load a different file.
+"""
+
+from __future__ import annotations
+
+import os
+import re
+import sys
+
+KEY_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+class DotenvError(ValueError):
+    pass
+
+
+def usage(exit_code: int = 64) -> None:
+    print(
+        "Usage: z-dotenv [--] <command> [args...]\n"
+        "Loads ~/.env into the process environment, then execs the command.\n"
+        "Override the env file with Z_DOTENV_FILE=/path/to/.env.",
+        file=sys.stderr,
+    )
+    raise SystemExit(exit_code)
+
+
+def parse_double_quoted(value: str, line_no: int) -> str:
+    out: list[str] = []
+    i = 1  # skip opening quote
+
+    while i < len(value):
+        ch = value[i]
+        if ch == '"':
+            rest = value[i + 1 :].strip()
+            if rest and not rest.startswith("#"):
+                raise DotenvError(f"line {line_no}: unexpected text after quoted value")
+            return "".join(out)
+
+        if ch == "\\" and i + 1 < len(value):
+            nxt = value[i + 1]
+            escapes = {
+                "n": "\n",
+                "r": "\r",
+                "t": "\t",
+                '"': '"',
+                "\\": "\\",
+                "$": "$",
+            }
+            out.append(escapes.get(nxt, nxt))
+            i += 2
+            continue
+
+        out.append(ch)
+        i += 1
+
+    raise DotenvError(f"line {line_no}: unterminated double-quoted value")
+
+
+def parse_single_quoted(value: str, line_no: int) -> str:
+    end = value.find("'", 1)
+    if end == -1:
+        raise DotenvError(f"line {line_no}: unterminated single-quoted value")
+
+    rest = value[end + 1 :].strip()
+    if rest and not rest.startswith("#"):
+        raise DotenvError(f"line {line_no}: unexpected text after quoted value")
+
+    return value[1:end]
+
+
+def parse_unquoted(value: str) -> str:
+    # A # starts a comment at the beginning of a value or after whitespace.
+    for i, ch in enumerate(value):
+        if ch == "#" and (i == 0 or value[i - 1].isspace()):
+            return value[:i].strip()
+    return value.strip()
+
+
+def parse_value(raw: str, line_no: int) -> str:
+    value = raw.lstrip()
+    if value == "":
+        return ""
+    if value.startswith('"'):
+        return parse_double_quoted(value, line_no)
+    if value.startswith("'"):
+        return parse_single_quoted(value, line_no)
+    return parse_unquoted(value)
+
+
+def load_dotenv(path: str) -> None:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        print(f"z-dotenv: env file not found: {path}", file=sys.stderr)
+        raise SystemExit(66)
+
+    for line_no, line in enumerate(lines, start=1):
+        if line_no == 1:
+            line = line.removeprefix("\ufeff")
+
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+
+        if stripped.startswith("export ") or stripped.startswith("export\t"):
+            stripped = stripped[6:].lstrip()
+
+        if "=" not in stripped:
+            raise DotenvError(f"line {line_no}: expected KEY=VALUE")
+
+        key, raw_value = stripped.split("=", 1)
+        key = key.strip()
+        if not KEY_RE.match(key):
+            raise DotenvError(f"line {line_no}: invalid variable name: {key!r}")
+
+        os.environ[key] = parse_value(raw_value, line_no)
+
+
+def main(argv: list[str]) -> int:
+    if not argv or argv[0] in {"-h", "--help"}:
+        usage(0 if argv else 64)
+
+    if argv[0] == "--":
+        argv = argv[1:]
+    if not argv:
+        usage()
+
+    env_file = os.environ.get("Z_DOTENV_FILE", os.path.expanduser("~/.env"))
+
+    try:
+        load_dotenv(env_file)
+    except DotenvError as exc:
+        print(f"z-dotenv: {env_file}: {exc}", file=sys.stderr)
+        return 65
+
+    try:
+        os.execvp(argv[0], argv)
+    except FileNotFoundError:
+        print(f"z-dotenv: command not found: {argv[0]}", file=sys.stderr)
+        return 127
+    except PermissionError:
+        print(f"z-dotenv: permission denied: {argv[0]}", file=sys.stderr)
+        return 126
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
