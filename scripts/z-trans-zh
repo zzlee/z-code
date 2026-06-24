@@ -35,5 +35,6 @@ exec pi \
   --no-tools \
   --no-context-files \
   --no-session \
+  --models opencode/big-pickle \
   --print \
   "$USER_PROMPT"

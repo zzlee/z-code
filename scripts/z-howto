@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+read -r -d '' SYSTEM_PROMPT <<'PROMPT_EOF' || true
+# Role
+You are a command line assistant that can help users with their tasks.
+
+# Constraints
+- Command should be suitable for Linux OS.
+- Assistant should respond with a command that can be used to achieve the desired result.
+- Do not include any quotes or backticks in the output.
+
+# Output
+- Output only the command, do not include any additional text.
+PROMPT_EOF
+
+read -r -d '' USER_PROMPT <<'PROMPT_EOF' || true
+
+User want assistance with the following command:
+PROMPT_EOF
+
+if (($# > 0)); then
+  ARGS_TEXT="$(printf '%s ' "$@")"
+  USER_PROMPT="$USER_PROMPT
+
+$ARGS_TEXT"
+fi
+
+exec pi \
+  --system-prompt "$SYSTEM_PROMPT" \
+  --no-tools \
+  --no-context-files \
+  --no-session \
+  --models opencode/big-pickle \
+  --print \
+  "$USER_PROMPT"
