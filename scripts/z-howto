@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${1:-}" == "--install-widget" ]]; then
+  # Resolve absolute path so the widget works regardless of invocation
+  self="$(realpath "$0" 2>/dev/null || readlink -f "$0" 2>/dev/null || echo "$0")"
+  cat <<WIDGET_EOF
+# z-howto widget: press Ctrl+H to generate a command inserted at cursor
+_z_howto_widget() {
+  local query result
+  read -e -p "z-howto> " query || return
+  result=\$($self "\$query" </dev/null) || return
+  READLINE_LINE="\${READLINE_LINE:0:READLINE_POINT}\${result}\${READLINE_LINE:READLINE_POINT}"
+  READLINE_POINT=\$((READLINE_POINT + \${#result}))
+}
+bind -x '"\C-h": _z_howto_widget'
+WIDGET_EOF
+  exit 0
+fi
+
 read -r -d '' SYSTEM_PROMPT <<'PROMPT_EOF' || true
 # Role
 You are a command line assistant that can help users with their tasks.

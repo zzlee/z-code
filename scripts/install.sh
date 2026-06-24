@@ -91,6 +91,26 @@ for src in "$SOURCE_DIR"/z-*; do
   echo "  → ${dst}"
 done
 
+# Offer z-howto READLINE widget installation
+if [[ -f "${INSTALL_DIR}/z-howto" ]]; then
+  echo ""
+  echo "z-howto widget: press Ctrl+H to insert generated commands at your prompt."
+  read -r -p "Install widget into ~/.bashrc? [y/N] " answer
+  if [[ "$answer" =~ ^[Yy] ]]; then
+    if grep -qs '_z_howto_widget' ~/.bashrc 2>/dev/null; then
+      echo "  Widget already installed in ~/.bashrc (skipped)"
+    else
+      "${INSTALL_DIR}/z-howto" --install-widget >> ~/.bashrc
+      echo "  Widget added to ~/.bashrc"
+      echo "  Run: source ~/.bashrc  (or open a new terminal)"
+    fi
+  else
+    echo "  To install manually later:"
+    echo "    eval \"\$(${INSTALL_DIR}/z-howto --install-widget)\"     # activate now"
+    echo "    ${INSTALL_DIR}/z-howto --install-widget >> ~/.bashrc   # permanent"
+  fi
+fi
+
 echo ""
 echo "Done. Make sure ${INSTALL_DIR} is in your PATH:"
 echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
