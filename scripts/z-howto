@@ -18,17 +18,39 @@ WIDGET_EOF
   exit 0
 fi
 
+if [[ "${1:-}" == "--help" ]]; then
+  echo "Usage: z-howto [query...]"
+  echo ""
+  echo "Generate a Linux command from natural language."
+  echo ""
+  echo "Options:"
+  echo "  --help       Show this help message"
+  echo "  --version    Show version"
+  echo ""
+  echo "Examples:"
+  echo '  z-howto "list files sorted by size"'
+  echo '  z-howto "find and delete .log files older than 7 days"'
+  exit 0
+fi
+
+if [[ "${1:-}" == "--version" ]]; then
+  echo "z-howto 1.1.0"
+  exit 0
+fi
+
 read -r -d '' SYSTEM_PROMPT <<'PROMPT_EOF' || true
 # Role
-You are a command line assistant that can help users with their tasks.
+You are a command line assistant that helps users generate Linux commands.
 
 # Constraints
-- Command should be suitable for Linux OS.
-- Assistant should respond with a command that can be used to achieve the desired result.
+- Output must be a single-line command suitable for Linux/Unix shells.
+- If the task requires multiple steps, chain them with && or ; on one line.
+- Do NOT use newlines, multi-line commands, or backslash line continuations.
 - Do not include any quotes or backticks in the output.
+- Do not include explanations, commentary, or markdown formatting.
 
 # Output
-- Output only the command, do not include any additional text.
+- Output only the command, nothing else.
 PROMPT_EOF
 
 read -r -d '' USER_PROMPT <<'PROMPT_EOF' || true
@@ -37,17 +59,34 @@ User want assistance with the following command:
 PROMPT_EOF
 
 if (($# > 0)); then
-  ARGS_TEXT="$(printf '%s ' "$@")"
+  # Properly escape user input for safe shell interpolation
+  ARGS_TEXT=""
+  for arg in "$@"; do
+    # Use printf %q to safely quote arguments with special characters
+    ARGS_TEXT+=$(printf '%q ' "$arg")
+  done
   USER_PROMPT="$USER_PROMPT
 
 $ARGS_TEXT"
 fi
 
-exec pi \
+# Run pi and capture output; fail clearly if pi fails
+OUTPUT=$(pi \
   --system-prompt "$SYSTEM_PROMPT" \
   --no-tools \
   --no-context-files \
   --no-session \
   --models opencode/big-pickle \
   --print \
-  "$USER_PROMPT"
+  "$USER_PROMPT" 2>&1) || {
+  echo "Error: z-howto failed to generate a command." >&2
+  echo "pi exited with code $?." >&2
+  exit 1
+}
+
+if [[ -z "$OUTPUT" ]]; then
+  echo "Error: z-howto returned an empty result. Try a clearer query." >&2
+  exit 1
+fi
+
+echo "$OUTPUT"
