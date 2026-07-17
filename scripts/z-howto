@@ -74,6 +74,7 @@ fi
 OUTPUT=$(pi \
   --system-prompt "$SYSTEM_PROMPT" \
   --no-tools \
+  --no-extensions \
   --no-context-files \
   --no-session \
   --models opencode/big-pickle \
