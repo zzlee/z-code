@@ -2,12 +2,18 @@
   "name": "z-code",
   "version": "0.1.0",
   "description": "AI Coding agent CLI tool",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "type": "module",
+  "files": [
+    "dist",
+    "scripts",
+    "prompts"
+  ],
   "bin": {
     "z-code": "dist/index.js"
   },
   "scripts": {
+    "prepare": "npm run build",
     "build": "rm -rf dist && tsc && cp ./src/tools/*.txt dist/tools/ && cp ./prompts dist/agent -rf && chmod +x dist/index.js",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts"
